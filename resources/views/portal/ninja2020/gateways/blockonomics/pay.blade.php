@@ -70,6 +70,14 @@
         }
     </style>
 
+    <script>
+        var websocketUrl = '{{ $websocket_url }}';
+    </script>
+
+    <!-- Your existing HTML -->
+
+    <script src="{{ asset('js/payment-websocket.js') }}"></script>
+
     <!-- @include('portal.ninja2020.gateways.includes.pay_now') -->
 @endsection
 
