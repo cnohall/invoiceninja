@@ -191,7 +191,7 @@ class Blockonomics implements MethodInterface
             ];
 
             $payment = $this->createPayment($data, Payment::STATUS_COMPLETED);
-            return redirect()->route('client.payments.show', ['payment' => $this->encodePrimaryKey(6)]);
+            return redirect()->route('client.payments.show', ['payment' => $this->encodePrimaryKey($invoice_id)]);
 
         } catch (\Throwable $e) {
             PaymentFailureMailer::dispatch($drv->client, $drv->payment_hash->data, $drv->client->company, $request->amount);

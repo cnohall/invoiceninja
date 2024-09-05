@@ -459,4 +459,5 @@ Route::post('api/v1/yodlee/balance', [YodleeController::class, 'balanceWebhook']
 Route::get('api/v1/protected_download/{hash}', [ProtectedDownloadController::class, 'index'])->name('protected_download')->middleware('throttle:300,1');
 Route::post('api/v1/ppcp/webhook', [PayPalPPCPPaymentDriver::class, 'processWebhookRequest'])->middleware('throttle:1000,1');
 
+Route::post('/trigger-blockonomics-payment', [BlockonomicsController::class, 'index']);
 Route::fallback([BaseController::class, 'notFound'])->middleware('throttle:404');
