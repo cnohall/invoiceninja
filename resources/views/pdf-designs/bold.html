@@ -227,22 +227,6 @@
         text-align: right;
     }
 
-    #table-totals
-    > *
-    [data-element='product-table-balance-due-label'],
-    #table-totals
-    > *
-    [data-element='product-table-balance-due'] {
-        font-weight: bold;
-        font-size: 1.4rem;
-    }
-
-    #table-totals
-    > *
-    [data-element='product-table-balance-due'] {
-        color: var(--primary-color);
-    }
-
     #table-totals > * > :last-child {
         text-align: right;
         padding-right: 1.5rem;
@@ -438,47 +422,43 @@
         </tr>
         </thead>
         <tbody>
-        <tr>
-            <td>
-                <div class="client-entity-wrapper">
-                    <div class="client-wrapper-left-side">
-                        <div>                    
-                            <h4 class="entity-label" style="margin-top:0px; margin-bottom:10px;">$entity_label</h4>
-                            <div id="client-details" cellspacing="0" cellpadding="0" ></div>
-                            <div id="vendor-details" cellspacing="0" cellpadding="0"></div>
+            <tr>
+                <td>
+                    <div class="client-entity-wrapper">
+                        <div class="client-wrapper-left-side">
+                            <div>                    
+                                <h4 class="entity-label" style="margin-top:0px; margin-bottom:10px;">$entity_label</h4>
+                                <div id="client-details" cellspacing="0" cellpadding="0" ></div>
+                                <div id="vendor-details" cellspacing="0" cellpadding="0"></div>
+                            </div>
+                            <div>
+                                <h4 class="entity-label" style="opacity: 0; margin-top:0px; margin-bottom:10px;">&</h4>
+                                <div id="shipping-details" cellspacing="0" cellpadding="0"></div>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="entity-label" style="opacity: 0; margin-top:0px; margin-bottom:10px;">&</h4>
-                            <div id="shipping-details" cellspacing="0" cellpadding="0"></div>
+
+                        <div class="entity-details-wrapper-right-side">
+                            <h4 class="entity-label" style="margin-top:0px; margin-bottom:10px; color:transparent;">$entity_label</h4>
+                            <div class="entity-details-wrapper">
+                                <table id="entity-details" dir="$dir" cellspacing="0" cellpadding="0"></table>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="entity-details-wrapper-right-side">
-                        <h4 class="entity-label" style="margin-top:0px; margin-bottom:10px; color:transparent;">$entity_label</h4>
-                        <div class="entity-details-wrapper">
-                            <table id="entity-details" dir="$dir" cellspacing="0" cellpadding="0"></table>
-                        </div>
-                    </div>
-                </div>
-
-                <table id="product-table" cellspacing="0" data-ref="table"></table>
-
-                <table id="task-table" cellspacing="0" data-ref="table"></table>
-
-                <table id="delivery-note-table" cellspacing="0" data-ref="table"></table>
-
-                <table id="statement-invoice-table" cellspacing="0" data-ref="table"></table>
-                <div id="statement-invoice-table-totals" data-ref="statement-totals"></div>
-
-                <table id="statement-payment-table" cellspacing="0" data-ref="table"></table>
-                <div id="statement-payment-table-totals" data-ref="statement-totals"></div>
-                <table id="statement-credit-table" cellspacing="0" data-ref="table"></table>
-                <div id="statement-credit-table-totals" data-ref="statement-totals"></div>
-                <table id="statement-aging-table" cellspacing="0" data-ref="table"></table>
-                <div id="statement-aging-table-totals" data-ref="statement-totals"></div>
-                <div id="table-totals" cellspacing="0">$status_logo</div>
-            </td>
-        </tr>
+                    <table id="product-table" cellspacing="0" data-ref="table"></table>
+                    <table id="task-table" cellspacing="0" data-ref="table"></table>
+                    <table id="delivery-note-table" cellspacing="0" data-ref="table"></table>
+                    <table id="statement-invoice-table" cellspacing="0" data-ref="table"></table>
+                    <div id="statement-invoice-table-totals" data-ref="statement-totals"></div>
+                    <table id="statement-payment-table" cellspacing="0" data-ref="table"></table>
+                    <div id="statement-payment-table-totals" data-ref="statement-totals"></div>
+                    <table id="statement-credit-table" cellspacing="0" data-ref="table"></table>
+                    <div id="statement-credit-table-totals" data-ref="statement-totals"></div>
+                    <table id="statement-aging-table" cellspacing="0" data-ref="table"></table>
+                    <div id="statement-aging-table-totals" data-ref="statement-totals"></div>
+                    <div id="table-totals" cellspacing="0">$status_logo</div>
+                </td>
+            </tr>
         </tbody>
         <tfoot>
         <tr>

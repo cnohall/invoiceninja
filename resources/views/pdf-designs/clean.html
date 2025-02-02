@@ -62,7 +62,7 @@
     }
 
     #company-details {
-       justify-self: center;
+        justify-self: center;
         align-self: start;
         display: flex;
         flex-direction: column;
@@ -185,7 +185,7 @@
         padding-right: 1rem;
         padding-left: 1rem;
         gap: 80px;
-        page-break-inside: avoid;
+        page-break-inside: auto;
         overflow: visible !important;
     }
 
@@ -207,15 +207,6 @@
         --tw-space-y-reverse: 0;
         margin-top: calc(.75rem * calc(1 - var(--tw-space-y-reverse)));
         margin-bottom: calc(.75rem * var(--tw-space-y-reverse));
-    }
-
-    #table-totals>* [data-element='product-table-balance-due-label'],
-    #table-totals>* [data-element='product-table-balance-due'] {
-        font-weight: bold;
-    }
-
-    #table-totals>* [data-element='product-table-balance-due'] {
-        color: var(--primary-color);
     }
 
     #table-totals>*> :last-child {
@@ -388,8 +379,13 @@
                     <div id="statement-credit-table-totals" data-ref="statement-totals"></div>
                     <table id="statement-aging-table" cellspacing="0" data-ref="table"></table>
                     <div id="statement-aging-table-totals" data-ref="statement-totals"></div>
-                    <div id="table-totals" cellspacing="0">$status_logo</div>
+                    
                 </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="table-totals" cellspacing="0">$status_logo</div>
             </td>
         </tr>
     </tbody>
