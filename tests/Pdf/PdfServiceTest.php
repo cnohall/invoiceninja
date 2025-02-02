@@ -45,7 +45,6 @@ class PdfServiceTest extends TestCase
 
         \App\Models\Design::where('is_custom',false)->cursor()->each(function ($design){
 
-
             $this->invoice->design_id = $design->id;
             $this->invoice->save();
             $this->invoice = $this->invoice->fresh();
@@ -61,7 +60,6 @@ class PdfServiceTest extends TestCase
             
         });
     
-
         \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) {
 
 
