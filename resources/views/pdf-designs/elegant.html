@@ -188,7 +188,6 @@
         grid-template-columns: 2fr 1fr;
         padding-top: 0.5rem;
         padding-left: 1rem;
-        margin-right: .75rem;
         gap: 80px;
         page-break-inside:auto;
         overflow: visible !important;
@@ -212,11 +211,12 @@
 
     #table-totals>.totals-table-right-side>*> :nth-child(2) {
         text-align: right;
+        margin-right: 1rem;
     }
 
     #table-totals > * > :last-child {
         text-align: right;
-        padding-right: 0.5rem;
+        margin-right: .75rem;
     }
 
     [data-ref="total_table-footer"] {
@@ -225,6 +225,7 @@
 
     #footer {
         margin-top: 30px;
+        padding-left: 1rem;
     }
 
     /** Markdown-specific styles. **/
