@@ -100,7 +100,7 @@ class GoCardlessPaymentDriver extends BaseDriver
         $environment = $this->company_gateway->getConfigField('testMode') ? \GoCardlessPro\Environment::SANDBOX : \GoCardlessPro\Environment::LIVE;
         
         if ($this->company_gateway->getConfigField('oauth2')) {
-            $environment = \GoCardlessPro\Environment::LIVE
+            $environment = \GoCardlessPro\Environment::LIVE;
         }
 
         try {
