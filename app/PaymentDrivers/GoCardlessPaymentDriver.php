@@ -97,10 +97,16 @@ class GoCardlessPaymentDriver extends BaseDriver
 
     public function init(): self
     {
+        $environment = $this->company_gateway->getConfigField('testMode') ? \GoCardlessPro\Environment::SANDBOX : \GoCardlessPro\Environment::LIVE;
+        
+        if ($this->company_gateway->getConfigField('oauth2')) {
+            $environment = \GoCardlessPro\Environment::LIVE
+        }
+
         try {
             $this->gateway = new \GoCardlessPro\Client([
                 'access_token' => $this->company_gateway->getConfigField('accessToken'),
-                'environment'  => $this->company_gateway->getConfigField('testMode') ? \GoCardlessPro\Environment::SANDBOX : \GoCardlessPro\Environment::LIVE,
+                'environment'  => $environment,
             ]);
         } catch (\GoCardlessPro\Core\Exception\AuthenticationException $e) {
 
