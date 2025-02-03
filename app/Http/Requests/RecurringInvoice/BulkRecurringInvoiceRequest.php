@@ -49,10 +49,7 @@ class BulkRecurringInvoiceRequest extends Request
             case 'uses_inclusive_taxes':
                 $rules['new_value'] = ['required_if:action,bulk_update', 'boolean'];
                 break;
-            
-            default:
-                $rules['new_value'] = ['required_if:action,bulk_update', 'string'];
-                
+                            
         }
 
         return $rules;
@@ -61,11 +58,14 @@ class BulkRecurringInvoiceRequest extends Request
     public function prepareForValidation()
     {
         $input = $this->all();
-
         if (isset($input['ids'])) {
             $input['ids'] = $this->transformKeys($input['ids']);
         }
 
+        if(!isset($input['new_value'])) {
+            $input['new_value'] = '';
+        }
+        
         $this->replace($input);
     }
 }
