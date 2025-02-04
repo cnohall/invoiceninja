@@ -42,7 +42,6 @@
     .header-wrapper {
         display: grid;
         margin-top: 2rem;
-        gap: 20px;
         grid-template-columns: 2fr 1fr 1fr;
         grid-template-areas: "a b c";
         grid-auto-columns: minmax(0, 5fr);
@@ -53,7 +52,6 @@
     .header-wrapper2 {
         display: grid;
         margin-top: 2rem;
-        gap: 20px;
         grid-template-columns: 2fr 2fr auto;
         grid-template-areas: "a b c";
         grid-auto-columns: minmax(0, 5fr);
@@ -62,7 +60,6 @@
     }
 
     .company-logo {
-        /*        max-width: 65%;*/
         max-width: $company_logo_size;
     }
 
@@ -87,12 +84,14 @@
         display: flex;
         flex-direction: column;
         line-height: var(--line-height);
+        margin-left: 20px;
     }
 
     .header-wrapper #company-details {
         display: flex;
         flex-direction: column;
         line-height: var(--line-height);
+        margin-left: 20px;
     }
 
     .header-wrapper #entity-details {
@@ -184,7 +183,6 @@
         display: grid;
         grid-template-columns: 1.5fr 1fr;
         padding-top: .5rem;
-        padding-left: 1rem;
         gap: 80px;
         page-break-inside: auto;
         overflow: visible !important;
@@ -227,7 +225,6 @@
     }
 
     [data-ref="total_table-footer"] {
-        padding-left: 1rem;
         padding-right: 1rem;
     }
 

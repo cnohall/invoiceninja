@@ -104,6 +104,8 @@
         text-align: left;
         margin-right: 20px;
         line-height: var(--line-height) !important;
+        justify-self: start;
+        align-self: start;
     }
 
     #entity-details>tr,
@@ -118,6 +120,8 @@
         flex-direction: column;
         line-height: var(--line-height);
         padding-right: 30px;
+        justify-self: center;
+        align-self: start;
     }
 
     #client-details> :first-child {
@@ -128,6 +132,8 @@
         display: $show_shipping_address;
         flex-direction: column;
         line-height: var(--line-height);
+        justify-self: end;
+        align-self: start;
     }
 
     [data-ref="table"] {
@@ -183,7 +189,6 @@
         grid-template-columns: 2fr 1fr;
         padding-top: 0rem;
         padding-right: 1rem;
-        padding-left: 1rem;
         gap: 80px;
         page-break-inside: auto;
         overflow: visible !important;
@@ -216,7 +221,6 @@
 
     #footer {
         margin-top: 10px;
-        margin-left: 1rem;
     }
 
     /** Markdown-specific styles. **/
