@@ -97,11 +97,11 @@ class PdfBuilder
 
             if ($el && $el->childElementCount === 0) {
                 $el->parentNode->removeChild($el); // This removes the element completely
+                continue;
             }
 
         }
                 
-            
         $xpath = new \DOMXPath($this->document);
         $elements = $xpath->query('//*[@data-state="encoded-html"]');
 
@@ -141,10 +141,9 @@ class PdfBuilder
 
             }
 
+            unset($temp);
 
         }
-
-
 
         return $this;
     }
@@ -727,6 +726,50 @@ class PdfBuilder
         ];
     }
 
+    private function parseVisibleElements(array $element): array
+    {
+        
+        $visible_elements = array_filter($element['elements'], function ($el) {
+            if (isset($el['properties']['visi']) && $el['properties']['visi']) {
+                return true;
+            }
+            return false;
+        });
+
+        if (!empty($visible_elements)) {
+            $first_visible = array_key_first($visible_elements);
+            $last_visible = array_key_last($visible_elements);
+
+            // Add class to first visible cell
+            if (!isset($element['elements'][$first_visible]['properties']['class'])) { //@phpstan-ignore-line
+                $element['elements'][$first_visible]['properties']['class'] = 'left-radius';
+            } else {
+                $element['elements'][$first_visible]['properties']['class'] .= ' left-radius';
+            }
+
+            // Add class to last visible cell
+            if (!isset($element['elements'][$last_visible]['properties']['class'])) {
+                $element['elements'][$last_visible]['properties']['class'] = 'right-radius';
+            } else {
+                $element['elements'][$last_visible]['properties']['class'] .= ' right-radius';
+            }
+        }
+
+        // Then, filter the elements array
+        $element['elements'] = array_map(function ($el) {
+            if (isset($el['properties']['visi'])) {
+                if ($el['properties']['visi'] === false) {
+                    $el['properties']['style'] = 'display: none;';
+                }
+                unset($el['properties']['visi']);
+            }
+            return $el;
+        }, $element['elements']);
+
+        return $element;
+
+    }
+
 
     /**
      * Generate the structure of table body. (<tbody/>)
@@ -777,56 +820,10 @@ class PdfBuilder
                     }
                 }
 
-                $visible_elements = array_filter($element['elements'], function ($el) {
-                    if (isset($el['properties']['visi']) && $el['properties']['visi']) {
-                        return true;
-                    }
-                    return false;
-                });
-
-                if (!empty($visible_elements)) {
-                    $first_visible = array_key_first($visible_elements);
-                    $last_visible = array_key_last($visible_elements);
-
-                    // Add class to first visible cell
-                    if (!isset($element['elements'][$first_visible]['properties']['class'])) { //@phpstan-ignore-line
-                        $element['elements'][$first_visible]['properties']['class'] = 'left-radius';
-                    } else {
-                        $element['elements'][$first_visible]['properties']['class'] .= ' left-radius';
-                    }
-
-                    // Add class to last visible cell
-                    if (!isset($element['elements'][$last_visible]['properties']['class'])) {
-                        $element['elements'][$last_visible]['properties']['class'] = 'right-radius';
-                    } else {
-                        $element['elements'][$last_visible]['properties']['class'] .= ' right-radius';
-                    }
-                }
-
-                // Then, filter the elements array
-                $element['elements'] = array_map(function ($el) {
-                    if (isset($el['properties']['visi'])) {
-                        if ($el['properties']['visi'] === false) {
-                            $el['properties']['style'] = 'display: none;';
-                        }
-                        unset($el['properties']['visi']);
-                    }
-                    return $el;
-                }, $element['elements']);
+                $element = $this->parseVisibleElements($element);
 
                 $elements[] = $element;
             }
-
-
-
-
-
-
-
-
-
-
-
 
             return $elements;
         }
@@ -890,50 +887,14 @@ class PdfBuilder
                     } elseif ($cell == '$task.tax_rate3') {
                         $element['elements'][] = ['element' => 'td', 'content' => $row[$cell], 'properties' => ['data-ref' => 'task_table-task.tax3-td', 'visi' => $this->visibilityCheck($column_visibility, $cell)]];
                     } elseif ($cell == '$product.unit_cost' || $cell == '$task.rate') {
-                        $element['elements'][] = ['element' => 'td', 'content' => $row[$cell], 'properties' => ['style' => 'white-space: nowrap;', 'data-ref' => "{$_type}_table-" . substr($cell, 1) . '-td', 'style' => $this->visibilityCheck($column_visibility, $cell)]];
+                        $element['elements'][] = ['element' => 'td', 'content' => $row[$cell], 'properties' => ['style' => 'white-space: nowrap;', 'data-ref' => "{$_type}_table-" . substr($cell, 1) . '-td', 'visi' => $this->visibilityCheck($column_visibility, $cell)]];
                     } else {
                         $element['elements'][] = ['element' => 'td', 'content' => $row[$cell], 'properties' => ['data-ref' => "{$_type}_table-" . substr($cell, 1) . '-td', 'visi' => $this->visibilityCheck($column_visibility, $cell)]];
                     }
                 }
             }
                                     
-            $visible_elements = array_filter($element['elements'], function ($el) {
-                if (isset($el['properties']['visi']) && $el['properties']['visi']) {
-                    return true;
-                }
-                return false;
-            });
-
-            if (!empty($visible_elements)) {
-                $first_visible = array_key_first($visible_elements);
-                $last_visible = array_key_last($visible_elements);
-
-                // Add class to first visible cell
-                if (!isset($element['elements'][$first_visible]['properties']['class'])) { //@phpstan-ignore-line
-                    $element['elements'][$first_visible]['properties']['class'] = 'left-radius';
-                } else {
-                    $element['elements'][$first_visible]['properties']['class'] .= ' left-radius';
-                }
-
-                // Add class to last visible cell
-                if (!isset($element['elements'][$last_visible]['properties']['class'])) {
-                    $element['elements'][$last_visible]['properties']['class'] = 'right-radius';
-                } else {
-                    $element['elements'][$last_visible]['properties']['class'] .= ' right-radius';
-                }
-            }
-
-            // Then, filter the elements array
-            $element['elements'] = array_map(function ($el) {
-                if (isset($el['properties']['visi'])) {
-                    if ($el['properties']['visi'] === false) {
-                        $el['properties']['style'] = 'display: none;';
-                    }
-                    unset($el['properties']['visi']);
-                }
-                return $el;
-            }, $element['elements']);
-
+            $element = $this->parseVisibleElements($element);
 
             $elements[] = $element;
         }
@@ -977,10 +938,6 @@ class PdfBuilder
             $data[$key][$table_type.'.product_key'] = $item->product_key ?? $item->item;
             $data[$key][$table_type.'.item'] = $item->item ?? $item->product_key;
             $data[$key][$table_type.'.service'] = $item->service ?? $item->product_key;
-
-            // $data[$key][$table_type.'.product_key'] = is_null(optional($item)->product_key) ? $item->item : $item->product_key;
-            // $data[$key][$table_type.'.item'] = is_null(optional($item)->item) ? $item->product_key : $item->item;
-            // $data[$key][$table_type.'.service'] = is_null(optional($item)->service) ? $item->product_key : $item->service;
 
             $currentDateTime = null;
             if (isset($this->service->config->entity->next_send_date)) {
@@ -2140,22 +2097,22 @@ class PdfBuilder
         return $this;
     }
 
-    public function updateVariable(string $element, string $variable, string $value)
-    {
-        $element = $this->document->getElementById($element);
+    // public function updateVariable(string $element, string $variable, string $value)
+    // {
+    //     $element = $this->document->getElementById($element);
 
-        $original = $element->nodeValue;
+    //     $original = $element->nodeValue;
 
-        $element->nodeValue = '';
+    //     $element->nodeValue = '';
 
-        $replaced = strtr($original, [$variable => $value]);
+    //     $replaced = strtr($original, [$variable => $value]);
 
-        $element->appendChild(
-            $this->document->createTextNode($replaced)
-        );
+    //     $element->appendChild(
+    //         $this->document->createTextNode($replaced)
+    //     );
 
-        return $element;
-    }
+    //     return $element;
+    // }
 
     public function getEmptyElements(): self
     {
