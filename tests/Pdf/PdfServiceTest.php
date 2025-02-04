@@ -12,10 +12,15 @@
 
 namespace Tests\Pdf;
 
-use App\Services\Pdf\PdfConfiguration;
-use App\Services\Pdf\PdfService;
-use Tests\MockAccountData;
 use Tests\TestCase;
+use App\Models\Client;
+use App\Models\Company;
+use App\Models\Invoice;
+use Tests\MockAccountData;
+use App\Models\ClientContact;
+use App\Services\Pdf\PdfService;
+use App\DataMapper\CompanySettings;
+use App\Services\Pdf\PdfConfiguration;
 
 /**
  * 
@@ -29,11 +34,182 @@ class PdfServiceTest extends TestCase
     
     private string $min_pdf_variables = '{"client_details":["$client.name","$client.vat_number","$client.address1","$client.city_state_postal","$client.country"],"vendor_details":["$vendor.name","$vendor.vat_number","$vendor.address1","$vendor.city_state_postal","$vendor.country"],"purchase_order_details":["$purchase_order.number","$purchase_order.date","$purchase_order.total"],"company_details":["$company.name","$company.address1","$company.city_state_postal"],"company_address":["$company.name","$company.website"],"invoice_details":["$invoice.number","$invoice.date","$invoice.due_date","$invoice.balance"],"quote_details":["$quote.number","$quote.date","$quote.valid_until"],"credit_details":["$credit.date","$credit.number","$credit.balance"],"product_columns":["$product.item","$product.description","$product.line_total"],"product_quote_columns":["$product.item","$product.description","$product.unit_cost","$product.quantity","$product.discount","$product.tax","$product.line_total"],"task_columns":["$task.description","$task.rate","$task.line_total"],"total_columns":["$total","$total_taxes","$outstanding"],"statement_invoice_columns":["$invoice.number","$invoice.date","$due_date","$total","$balance"],"statement_payment_columns":["$invoice.number","$payment.date","$method","$statement_amount"],"statement_credit_columns":["$credit.number","$credit.date","$total","$credit.balance"],"statement_details":["$statement_date","$balance"],"delivery_note_columns":["$product.item","$product.description","$product.quantity"],"statement_unapplied_columns":["$payment.number","$payment.date","$payment.amount","$payment.payment_balance"]}';
 
+    private string $fake_email;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->makeTestData();
+
+        $this->fake_email = $this->faker->email();
+
+    }
+
+    public function testMaxInvoiceFields()
+    {
+        $settings = CompanySettings::defaults();
+        $settings->pdf_variables = json_decode($this->max_pdf_variables);
+        $settings->company_logo = 'https://pdf.invoicing.co/favicon-v2.png';
+        $settings->website = 'www.invoiceninja.com';
+        $settings->name = 'Invoice Ninja';
+        $settings->address1 = 'Address 1';
+        $settings->address2 = 'Address 2';
+        $settings->city = 'City';
+        $settings->state = 'State';
+        $settings->postal_code = 'Postal Code';
+        $settings->phone = '555-343-2323';
+        $settings->email = $this->fake_email;
+        $settings->country_id = '840';
+        $settings->vat_number = 'vat number';
+        $settings->id_number = 'id number';
+        $settings->use_credits_payment = 'always';
+        $settings->timezone_id = '1';
+        $settings->entity_send_time = 0;
+
+        $company = Company::factory()->create([
+            'account_id' => $this->account->id,
+            'settings' => $settings
+        ]);
+
+        $client = Client::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id
+        ]);
+
+        $contact = ClientContact::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id,
+            'client_id' => $client->id,
+            'is_primary' => true,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john@doe.com',
+            'phone' => '1234567890',
+            'send_email' => true,
+        ]);
+
+        $invoice = Invoice::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id,
+            'client_id' => $client->id,
+            'status_id' => Invoice::STATUS_DRAFT,
+        ]);
+
+        $invoice = $invoice->calc()->getInvoice();
+        $invoice = $invoice->service()->createInvitations()->markSent()->save();
+        $invoice = $invoice->fresh();
+
+
+        $this->assertGreaterThan(0, $invoice->invitations()->count());
+
+        \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) use($invoice) {
+            
+            $invoice->design_id = $design->id;
+            $invoice->save();
+            $invoice = $invoice->fresh();
+
+            $service = (new PdfService($invoice->invitations()->first()))->boot();
+            $pdf = $service->getPdf();
+
+            $this->assertNotNull($pdf);
+
+            \Illuminate\Support\Facades\Storage::put('/pdf/max_fields_' . $design->name.'.pdf', $pdf);
+
+        });
+
+    }
+
+    public function testMinInvoiceFields()
+    {
+        
+        $settings = CompanySettings::defaults();
+        $settings->pdf_variables = json_decode($this->min_pdf_variables);
+        $settings->company_logo = 'https://pdf.invoicing.co/favicon-v2.png';
+        $settings->website = 'www.invoiceninja.com';
+        $settings->name = 'Invoice Ninja';
+        $settings->address1 = 'Address 1';
+        $settings->address2 = 'Address 2';
+        $settings->city = 'City';
+        $settings->state = 'State';
+        $settings->postal_code = 'Postal Code';
+        $settings->phone = '555-343-2323';
+        $settings->email = $this->fake_email;
+        $settings->country_id = '840';
+        $settings->vat_number = 'vat number';
+        $settings->id_number = 'id number';
+        $settings->use_credits_payment = 'always';
+        $settings->timezone_id = '1';
+        $settings->entity_send_time = 0;
+
+        $company = Company::factory()->create([
+            'account_id' => $this->account->id,
+            'settings' => $settings
+        ]);
+
+        $client = Client::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id
+        ]);
+
+        $contact = ClientContact::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id,
+            'client_id' => $client->id,
+            'is_primary' => true,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john@doe.com',
+            'phone' => '1234567890',
+            'send_email' => true,
+        ]);
+
+        $invoice = Invoice::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id,
+            'client_id' => $client->id,
+            'status_id' => Invoice::STATUS_DRAFT,
+        ]);
+
+        $invoice = $invoice->calc()->getInvoice();
+        $invoice = $invoice->service()->createInvitations()->markSent()->save();
+
+        \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) use ($invoice) {
+
+            $invoice->design_id = $design->id;
+            $invoice->save();
+            $invoice = $invoice->fresh();
+
+            $service = (new PdfService($invoice->invitations->first()))->boot();
+            $pdf = $service->getPdf();
+
+            $this->assertNotNull($pdf);
+
+            \Illuminate\Support\Facades\Storage::put('/pdf/min_fields_' . $design->name.'.pdf', $pdf);
+
+        });
+
+    }
+
+
+    public function testStatementPdfGeneration()
+    {
+
+        $pdf = $this->client->service()->statement([
+            'client_id' => $this->client->hashed_id,
+            'start_date' => '2000-01-01',
+            'end_date' => '2023-01-01',
+            'show_aging_table' => true,
+            'show_payments_table' => true,
+            'status' => 'all'    
+        ]);
+    
+
+        $this->assertNotNull($pdf);
+
+        \Illuminate\Support\Facades\Storage::put('/pdf/statement.pdf', $pdf);
+
+
     }
 
     public function testMultiDesignGeneration()
@@ -77,97 +253,6 @@ class PdfServiceTest extends TestCase
             \Illuminate\Support\Facades\Storage::put('/pdf/dn_' . $design->name.'.pdf', $pdf);
 
         });
-
-    }
-
-    public function testMaxInvoiceFields()
-    {
-        $max_settings = json_decode($this->max_pdf_variables);
-
-        $settings = $this->company->settings;
-        $settings->pdf_variables = $max_settings;
-
-        $this->company->settings = $settings;
-        $this->company->save();
-
-        $this->invoice->company->settings->pdf_variables = $max_settings;
-
-        \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) use ($max_settings) {
-
-
-            $this->invoice->design_id = $design->id; 
-            $this->invoice->client->settings->pdf_variables = $max_settings;
-            $this->invoice->push();
-            $this->invoice = $this->invoice->fresh();
-
-            $invitation = $this->invoice->invitations->first();
-            $invitation->setRelation('company', $this->company);
-
-            $service = (new PdfService($invitation))->boot();
-            $pdf = $service->getPdf();
-
-            $this->assertNotNull($pdf);
-
-            \Illuminate\Support\Facades\Storage::put('/pdf/max_fields_' . $design->name.'.pdf', $pdf);
-
-        });
-
-
-    }
-
-    public function testMinInvoiceFields()
-    {
-        $min_settings = json_decode($this->min_pdf_variables);
-
-        $settings = $this->company->settings;
-        $settings->pdf_variables = $min_settings;
-
-        $this->company->settings = $settings;
-        $this->company->save();
-
-        $this->invoice->company->settings->pdf_variables = $min_settings;
-
-        \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) use ($min_settings) {
-
-
-            $this->invoice->design_id = $design->id;
-            $this->invoice->client->settings = $min_settings;
-            $this->invoice->push();
-            $this->invoice = $this->invoice->fresh();
-
-            $invitation = $this->invoice->invitations->first();
-            $invitation = $invitation->fresh();
-
-            $service = (new PdfService($invitation))->boot();
-            $pdf = $service->getPdf();
-
-            $this->assertNotNull($pdf);
-
-            \Illuminate\Support\Facades\Storage::put('/pdf/min_fields_' . $design->name.'.pdf', $pdf);
-
-        });
-
-
-    }
-
-
-    public function testStatementPdfGeneration()
-    {
-
-        $pdf = $this->client->service()->statement([
-            'client_id' => $this->client->hashed_id,
-            'start_date' => '2000-01-01',
-            'end_date' => '2023-01-01',
-            'show_aging_table' => true,
-            'show_payments_table' => true,
-            'status' => 'all'    
-        ]);
-    
-
-        $this->assertNotNull($pdf);
-
-        \Illuminate\Support\Facades\Storage::put('/pdf/statement.pdf', $pdf);
-
 
     }
 
