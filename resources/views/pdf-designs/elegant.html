@@ -133,8 +133,7 @@
 
     [data-ref="table"] {
         margin-top: 3rem;
-        margin-bottom: 5
-        px;
+        margin-bottom: 5px;
         min-width: 100%;
         table-layout: fixed;
         overflow-wrap: break-word;
@@ -187,7 +186,6 @@
         display: grid;
         grid-template-columns: 2fr 1fr;
         padding-top: 0.5rem;
-        padding-left: 1rem;
         gap: 80px;
         page-break-inside:auto;
         overflow: visible !important;
@@ -220,12 +218,10 @@
     }
 
     [data-ref="total_table-footer"] {
-        padding-left: 1rem
     }
 
     #footer {
         margin-top: 30px;
-        padding-left: 1rem;
     }
 
     /** Markdown-specific styles. **/
@@ -269,6 +265,7 @@
         overflow-wrap: break-word;
         min-width: 100px !important;
     }
+
     .stamp {
       transform: rotate(12deg);
         color: #555;
@@ -362,44 +359,44 @@
       <tr>
          <td>
             <div id="body">
-               <div class="company-logo-wrapper">
-                  <img class="company-logo" src="$company.logo" alt="$company.name logo">
-               </div>
-               <hr class="double-border">
-               <div class="client-entity-wrapper" style="">
-                  <div class="wrapper-left-side">
-                     <div class="text-with-client">
+                <div class="company-logo-wrapper">
+                    <img class="company-logo" src="$company.logo" alt="$company.name logo">
+                </div>
+                <hr class="double-border">
+                <div class="client-entity-wrapper" style="">
+                    <div class="wrapper-left-side">
+                        <div class="text-with-client">
                         <h2 class="wrapper-info-text">$to_label</h2>
                         <div id="client-details"></div>
                         <div id="vendor-details"></div>
-                     </div>
-                     <div class="shipping-info" style="">
+                        </div>
+                        <div class="shipping-info" style="">
                         <h2 class="shipping-info-text">$shipping_label</h2>
                         <div id="shipping-details"></div>
-                     </div>
-                     <div class="company-info" style="">
+                        </div>
+                        <div class="company-info" style="">
                         <h2 class="wrapper-info-text">$from_label</h2>
                         <div id="company-details"></div>
                         <div id="company-address"></div>
-                     </div>
+                        </div>
                     <div class="wrapper-right-side">
                         <h2 class="wrapper-info-text">$details_label</h2>
                         <table id="entity-details" cellspacing="0" cellpadding="0" dir="$dir"></table>
                     </div>
                 </div>
-               </div>
-               <table id="product-table" cellspacing="0" data-ref="table"></table>
-               <table id="task-table" cellspacing="0" data-ref="table"></table>
-               <table id="delivery-note-table" cellspacing="0" data-ref="table"></table>
-               <table id="statement-invoice-table" cellspacing="0" data-ref="table"></table>
-               <div id="statement-invoice-table-totals" data-ref="statement-totals"></div>
-               <table id="statement-payment-table" cellspacing="0" data-ref="table"></table>
-               <div id="statement-payment-table-totals" data-ref="statement-totals"></div>
-                            <table id="statement-credit-table" cellspacing="0" data-ref="table"></table>
-                            <div id="statement-credit-table-totals" data-ref="statement-totals"></div>
-               <table id="statement-aging-table" cellspacing="0" data-ref="table"></table>
-               <div id="statement-aging-table-totals" data-ref="statement-totals"></div>
-               <div id="table-totals" cellspacing="0">$status_logo</div>
+                </div>
+                <table id="product-table" cellspacing="0" data-ref="table"></table>
+                <table id="task-table" cellspacing="0" data-ref="table"></table>
+                <table id="delivery-note-table" cellspacing="0" data-ref="table"></table>
+                <table id="statement-invoice-table" cellspacing="0" data-ref="table"></table>
+                <div id="statement-invoice-table-totals" data-ref="statement-totals"></div>
+                <table id="statement-payment-table" cellspacing="0" data-ref="table"></table>
+                <div id="statement-payment-table-totals" data-ref="statement-totals"></div>
+                <table id="statement-credit-table" cellspacing="0" data-ref="table"></table>
+                <div id="statement-credit-table-totals" data-ref="statement-totals"></div>
+                <table id="statement-aging-table" cellspacing="0" data-ref="table"></table>
+                <div id="statement-aging-table-totals" data-ref="statement-totals"></div>
+                <div id="table-totals" cellspacing="0">$status_logo</div>
             </div>
          </td>
       </tr>
