@@ -76,7 +76,7 @@
 
     .contacts-wrapper {
         display: grid;
-        gap: 20px;
+        gap: 0px;
         padding: 1rem 0rem 0rem 1rem;
         grid-template-columns: 1fr 1fr auto;
         grid-template-areas: "a b c";
@@ -137,14 +137,19 @@
     }
 
 
-    .contact-wrapper-left-side,
+    .contact-wrapper-left-side{
+        border-bottom: 1px solid var(--primary-color);
+    }
+    
     .contact-wrapper-right-side {
         border-bottom: 1px solid var(--primary-color);
+        margin-left:20px;
     }
 
     .shipping-wrapper-right-side {
         border-bottom: 1px solid var(--primary-color);
         display: $show_shipping_address_block;
+        margin-left:20px;
     }
 
     [data-ref="table"] {
