@@ -14,12 +14,15 @@ namespace Tests\Pdf;
 
 use Tests\TestCase;
 use App\Models\Client;
+use App\Models\Vendor;
 use App\Models\Company;
 use App\Models\Invoice;
 use Tests\MockAccountData;
 use App\Models\ClientContact;
+use App\Models\VendorContact;
 use App\Services\Pdf\PdfService;
 use App\DataMapper\CompanySettings;
+use App\Models\PurchaseOrder;
 use App\Services\Pdf\PdfConfiguration;
 
 /**
@@ -46,32 +49,13 @@ class PdfServiceTest extends TestCase
 
     }
 
-    public function testMaxInvoiceFields()
+    private function stubInvoice($settings, array $company_props = [])
     {
-        $settings = CompanySettings::defaults();
-        $settings->pdf_variables = json_decode($this->max_pdf_variables);
-        $settings->company_logo = 'https://pdf.invoicing.co/favicon-v2.png';
-        $settings->website = 'www.invoiceninja.com';
-        $settings->name = 'Invoice Ninja';
-        $settings->address1 = 'Address 1';
-        $settings->address2 = 'Address 2';
-        $settings->city = 'City';
-        $settings->state = 'State';
-        $settings->postal_code = 'Postal Code';
-        $settings->phone = '555-343-2323';
-        $settings->email = $this->fake_email;
-        $settings->country_id = '840';
-        $settings->vat_number = 'vat number';
-        $settings->id_number = 'id number';
-        $settings->use_credits_payment = 'always';
-        $settings->timezone_id = '1';
-        $settings->entity_send_time = 0;
-        $settings->hide_empty_columns_on_pdf = true;
-
-        $company = Company::factory()->create([
+                
+        $company = Company::factory()->create(array_merge([
             'account_id' => $this->account->id,
             'settings' => $settings
-        ]);
+        ], $company_props));
 
         $client = Client::factory()->create([
             'user_id' => $this->user->id,
@@ -101,6 +85,256 @@ class PdfServiceTest extends TestCase
         $invoice = $invoice->service()->createInvitations()->markSent()->save();
         $invoice = $invoice->fresh();
 
+        return $invoice;
+    }
+
+    private function stubPurchaseOrder($settings, array $company_props = [])
+    {
+
+        $company = Company::factory()->create(array_merge([
+                    'account_id' => $this->account->id,
+                    'settings' => $settings
+                ], $company_props));
+
+        $vendor = Vendor::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id
+        ]);
+
+        $contact = VendorContact::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id,
+            'vendor_id' => $vendor->id,
+            'is_primary' => true,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john@doe.com',
+            'phone' => '1234567890',
+            'send_email' => true,
+        ]);
+
+        $po = PurchaseOrder::factory()->create([
+            'user_id' => $this->user->id,
+            'company_id' => $company->id,
+            'vendor_id' => $vendor->id,
+            'status_id' => PurchaseOrder::STATUS_DRAFT,
+        ]);
+
+        $po = $po->calc()->getInvoice();
+        $po = $po->service()->createInvitations()->markSent()->save();
+        $po = $po->fresh();
+
+        return $po;
+
+    }
+
+    public function testPurchaseOrderGeneration()
+    {
+        
+        $settings = CompanySettings::defaults();
+        $settings->pdf_variables = json_decode($this->max_pdf_variables);
+        $settings->company_logo = 'https://pdf.invoicing.co/favicon-v2.png';
+        $settings->website = 'www.invoiceninja.com';
+        $settings->name = 'Invoice Ninja';
+        $settings->address1 = 'Address 1';
+        $settings->address2 = 'Address 2';
+        $settings->city = 'City';
+        $settings->state = 'State';
+        $settings->postal_code = 'Postal Code';
+        $settings->phone = '555-343-2323';
+        $settings->email = $this->fake_email;
+        $settings->country_id = '840';
+        $settings->vat_number = 'vat number';
+        $settings->id_number = 'id number';
+        $settings->use_credits_payment = 'always';
+        $settings->timezone_id = '1';
+        $settings->entity_send_time = 0;
+        $settings->hide_empty_columns_on_pdf = true;
+
+        $po = $this->stubPurchaseOrder($settings, ['markdown_enabled' => true]);
+
+        $items = $po->line_items;
+
+        $first_item = $items[0];
+
+        $first_item->notes = $this->faker->paragraphs(2, true);
+
+        $items[] = $first_item;
+
+        $new_item = $items[0];
+        $new_item->notes = '**Bold** _Italic_ [Link](https://www.google.com)  
+        + this  
+        + and that  
+        + is something to think about';
+
+        $items[] = $new_item;
+
+        $po->line_items = $items;
+        $po->calc()->getPurchaseOrder();
+        
+
+        $this->assertGreaterThan(0, $po->invitations()->count());
+
+        \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) use($po) {
+            
+            $po->design_id = $design->id;
+            $po->save();
+            $po = $po->fresh();
+
+            $service = (new PdfService($po->invitations()->first(), 'purchase_order'))->boot();
+            $pdf = $service->getPdf();
+
+            $this->assertNotNull($pdf);
+
+            \Illuminate\Support\Facades\Storage::put('/pdf/po_' . $design->name.'.pdf', $pdf);
+
+        });
+
+    }
+
+    public function testMarkdownEnabled()
+    {
+        
+        $settings = CompanySettings::defaults();
+        $settings->pdf_variables = json_decode($this->max_pdf_variables);
+        $settings->company_logo = 'https://pdf.invoicing.co/favicon-v2.png';
+        $settings->website = 'www.invoiceninja.com';
+        $settings->name = 'Invoice Ninja';
+        $settings->address1 = 'Address 1';
+        $settings->address2 = 'Address 2';
+        $settings->city = 'City';
+        $settings->state = 'State';
+        $settings->postal_code = 'Postal Code';
+        $settings->phone = '555-343-2323';
+        $settings->email = $this->fake_email;
+        $settings->country_id = '840';
+        $settings->vat_number = 'vat number';
+        $settings->id_number = 'id number';
+        $settings->use_credits_payment = 'always';
+        $settings->timezone_id = '1';
+        $settings->entity_send_time = 0;
+        $settings->hide_empty_columns_on_pdf = true;
+
+        $invoice = $this->stubInvoice($settings, ['markdown_enabled' => true]);
+
+        $items = $invoice->line_items;
+
+        $first_item = $items[0];
+
+        $first_item->notes = $this->faker->paragraphs(2, true);
+
+        $items[] = $first_item;
+
+        $new_item = $items[0];
+        $new_item->notes = '**Bold** _Italic_ [Link](https://www.google.com)  
+        + this  
+        + and that  
+        + is something to think about';
+
+        $items[] = $new_item;
+
+        $invoice->line_items = $items;
+        $invoice->calc()->getInvoice();
+        
+
+        $this->assertGreaterThan(0, $invoice->invitations()->count());
+
+        \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) use($invoice) {
+            
+            $invoice->design_id = $design->id;
+            $invoice->save();
+            $invoice = $invoice->fresh();
+
+            $service = (new PdfService($invoice->invitations()->first()))->boot();
+            $pdf = $service->getPdf();
+
+            $this->assertNotNull($pdf);
+
+            \Illuminate\Support\Facades\Storage::put('/pdf/markdown_' . $design->name.'.pdf', $pdf);
+
+        });
+
+    }
+
+
+
+    public function testLargeDescriptionField()
+    {
+        
+        $settings = CompanySettings::defaults();
+        $settings->pdf_variables = json_decode($this->max_pdf_variables);
+        $settings->company_logo = 'https://pdf.invoicing.co/favicon-v2.png';
+        $settings->website = 'www.invoiceninja.com';
+        $settings->name = 'Invoice Ninja';
+        $settings->address1 = 'Address 1';
+        $settings->address2 = 'Address 2';
+        $settings->city = 'City';
+        $settings->state = 'State';
+        $settings->postal_code = 'Postal Code';
+        $settings->phone = '555-343-2323';
+        $settings->email = $this->fake_email;
+        $settings->country_id = '840';
+        $settings->vat_number = 'vat number';
+        $settings->id_number = 'id number';
+        $settings->use_credits_payment = 'always';
+        $settings->timezone_id = '1';
+        $settings->entity_send_time = 0;
+        $settings->hide_empty_columns_on_pdf = true;
+
+        $invoice = $this->stubInvoice($settings);
+
+        $items = $invoice->line_items;
+
+        $items[0]->notes = $this->faker->text(500);
+
+        $invoice->line_items = $items;
+        $invoice->save();
+
+        $this->assertGreaterThan(0, $invoice->invitations()->count());
+
+        \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) use($invoice) {
+            
+            $invoice->design_id = $design->id;
+            $invoice->save();
+            $invoice = $invoice->fresh();
+
+            $service = (new PdfService($invoice->invitations()->first()))->boot();
+            $pdf = $service->getPdf();
+
+            $this->assertNotNull($pdf);
+
+            \Illuminate\Support\Facades\Storage::put('/pdf/desc_' . $design->name.'.pdf', $pdf);
+
+        });
+
+    }
+
+
+
+    public function testMaxInvoiceFields()
+    {
+        
+        $settings = CompanySettings::defaults();
+        $settings->pdf_variables = json_decode($this->max_pdf_variables);
+        $settings->company_logo = 'https://pdf.invoicing.co/favicon-v2.png';
+        $settings->website = 'www.invoiceninja.com';
+        $settings->name = 'Invoice Ninja';
+        $settings->address1 = 'Address 1';
+        $settings->address2 = 'Address 2';
+        $settings->city = 'City';
+        $settings->state = 'State';
+        $settings->postal_code = 'Postal Code';
+        $settings->phone = '555-343-2323';
+        $settings->email = $this->fake_email;
+        $settings->country_id = '840';
+        $settings->vat_number = 'vat number';
+        $settings->id_number = 'id number';
+        $settings->use_credits_payment = 'always';
+        $settings->timezone_id = '1';
+        $settings->entity_send_time = 0;
+        $settings->hide_empty_columns_on_pdf = true;
+
+        $invoice = $this->stubInvoice($settings);
 
         $this->assertGreaterThan(0, $invoice->invitations()->count());
 
@@ -144,37 +378,7 @@ class PdfServiceTest extends TestCase
         $settings->entity_send_time = 0;
         $settings->hide_empty_columns_on_pdf = true;
 
-        $company = Company::factory()->create([
-            'account_id' => $this->account->id,
-            'settings' => $settings
-        ]);
-
-        $client = Client::factory()->create([
-            'user_id' => $this->user->id,
-            'company_id' => $company->id
-        ]);
-
-        $contact = ClientContact::factory()->create([
-            'user_id' => $this->user->id,
-            'company_id' => $company->id,
-            'client_id' => $client->id,
-            'is_primary' => true,
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'email' => 'john@doe.com',
-            'phone' => '1234567890',
-            'send_email' => true,
-        ]);
-
-        $invoice = Invoice::factory()->create([
-            'user_id' => $this->user->id,
-            'company_id' => $company->id,
-            'client_id' => $client->id,
-            'status_id' => Invoice::STATUS_DRAFT,
-        ]);
-
-        $invoice = $invoice->calc()->getInvoice();
-        $invoice = $invoice->service()->createInvitations()->markSent()->save();
+        $invoice = $this->stubInvoice($settings);
 
         \App\Models\Design::where('is_custom', false)->cursor()->each(function ($design) use ($invoice) {
 

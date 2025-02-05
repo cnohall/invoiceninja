@@ -1601,6 +1601,10 @@ class PdfBuilder
      */
     public function taskTable(): array
     {
+
+        if($this->service->config->entity instanceof \App\Models\PurchaseOrder) 
+            return [];
+
         $task_items = collect($this->service->config->entity->line_items)->filter(function ($item) {
             return $item->type_id == 2;
         });
