@@ -73,7 +73,7 @@
         line-height: var(--line-height) !important;
         white-space: nowrap;
         border: 0px solid #000;
-       float:right;
+        float:right;
     }
 
     #entity-details>tr,
@@ -111,7 +111,6 @@
         min-width: 100%;
         table-layout: fixed;
         overflow-wrap: break-word;
-        margin-bottom: 5px;
     }
 
     .task-time-details {
@@ -146,7 +145,6 @@
         margin-top: 0rem;
         display: grid;
         grid-template-columns: 2fr 1fr;
-        padding-top: .5rem;
         margin-right: .75rem;
         gap: 80px;
         page-break-inside: auto;
@@ -241,54 +239,11 @@
 
     [data-ref='product_table-product.description-td'],
     [data-ref='task_table-task.description-th']{
-        min-width: 100px !important;
+        min-width: 150px !important;
         overflow-wrap: break-word;
     }
 
     
-    [data-ref='product_table-product.item-th'],
-    [data-ref='product_table-product.unit_cost-th'],
-    [data-ref='task_table-task.service-th'],
-    [data-ref='task_table-task.cost-th']{
-        width: 12%;
-    }
-
-    [data-ref='product_table-product.quantity-th'],
-    [data-ref='task_table-task.hours-th'],
-    [data-ref='task_table-task.quantity-th'],
-    [data-ref='product_table-product.product1-th'],
-    [data-ref='product_table-product.product2-th'],
-    [data-ref='product_table-product.product3-th'],
-    [data-ref='product_table-product.product4-th'] {
-        width: 10%;
-    }
-
-    [data-ref='product_table-product.tax1-th'] {
-        width: 6%;
-    }
-
-    [data-ref='product_table-product.line_total-th'],
-    [data-ref='product_table-product.line_total-td'],
-    [data-ref='task_table-task.line_total-th'],
-    [data-ref='task_table-task.line_total-td'] {
-        width: 12%;
-        text-align: right;
-    }
-
-    [data-ref='task_table-task.discount-th'],
-    [data-ref='task_table-task.task1-th'],
-    [data-ref='task_table-task.task2-th'],
-    [data-ref='task_table-task.task3-th'],
-    [data-ref='task_table-task.task4-th'] {
-        width: 10%;
-    }
-
-    
-    
-    [data-ref='task_table-task.tax1-th'] {
-        width: 10%;
-    }
-
     .stamp {
         transform: rotate(12deg);
         color: #555;

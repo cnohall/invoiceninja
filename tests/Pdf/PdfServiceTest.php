@@ -66,6 +66,7 @@ class PdfServiceTest extends TestCase
         $settings->use_credits_payment = 'always';
         $settings->timezone_id = '1';
         $settings->entity_send_time = 0;
+        $settings->hide_empty_columns_on_pdf = true;
 
         $company = Company::factory()->create([
             'account_id' => $this->account->id,
@@ -141,6 +142,7 @@ class PdfServiceTest extends TestCase
         $settings->use_credits_payment = 'always';
         $settings->timezone_id = '1';
         $settings->entity_send_time = 0;
+        $settings->hide_empty_columns_on_pdf = true;
 
         $company = Company::factory()->create([
             'account_id' => $this->account->id,

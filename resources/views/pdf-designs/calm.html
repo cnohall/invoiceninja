@@ -56,7 +56,13 @@
         grid-template-areas: "a b c";
         grid-auto-columns: minmax(0, 5fr);
         grid-auto-flow: column;
-        justify-content: left;
+        justify-content: space-between;
+
+    }
+
+    .header-wrapper2 .entity-container {
+        justify-self: end;
+        align-self: start;
     }
 
     .company-logo {
@@ -95,7 +101,6 @@
     }
 
     .header-wrapper #entity-details {
-        padding-right: 0.5rem;
         text-align: left;
         line-height: var(--line-height);
         width: 100%;
@@ -112,6 +117,10 @@
         background-color: #e6e6e6;
     }
 
+    .entity-label {
+        padding-left: 1rem;
+    }
+    
     #entity-details {
         text-align: left;
         width: 100%;
@@ -120,7 +129,7 @@
     #entity-details th {
         font-weight: normal;
         line-height: 1.5rem;
-        padding-right: 2rem;
+        padding-left: 1rem;
     }
 
     #client-details {
@@ -404,7 +413,7 @@
                             <div id="client-details"></div>
                             <div id="vendor-details"></div>
                             <div id="shipping-details"></div>
-                            <div>
+                            <div class="entity-container">
                                 <p class="entity-label"
                                     style="font-size:32px; font-weight: bold; color:$primary_color;">$entity_label</p>
                                 <table id="entity-details" cellspacing="0" cellpadding="0" dir="ltr"></table>
