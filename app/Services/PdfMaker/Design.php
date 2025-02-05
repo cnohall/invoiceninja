@@ -22,7 +22,11 @@ use App\Utils\Traits\MakesInvoiceValues;
 use DOMDocument;
 use Illuminate\Support\Str;
 
-/** @deprecated */
+
+/**
+ * @deprecated 2025-02-04
+ */
+
 class Design extends BaseDesign
 {
     use MakesInvoiceValues;
