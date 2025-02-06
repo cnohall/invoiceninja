@@ -212,7 +212,9 @@ class PdfBuilder
             $template = $template->render($data);
 
             $f = $this->document->createDocumentFragment();
+
             $f->appendXML($template);
+
             $replacements[] = $f;
 
         }

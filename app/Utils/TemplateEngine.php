@@ -257,7 +257,6 @@ class TemplateEngine
 
             /*If no custom design exists, send back a blank!*/
             if (strlen($wrapper) > 1) {
-                // $wrapper = $this->renderView($wrapper, $data);
             } else {
                 $wrapper = '';
             }

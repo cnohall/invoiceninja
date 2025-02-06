@@ -120,9 +120,11 @@ class TemplateService
         $function = new \Twig\TwigFunction('img', \Closure::fromCallable(function (string $image_src, string $image_style = '') {
             $html = '<img src="' . $image_src . '" style="' . $image_style . '"></img>';
 
-            return new \Twig\Markup($html, 'UTF-8');
+            return $html;
+            // return new \Twig\Markup($html, 'UTF-8');
 
         }));
+        
         $this->twig->addFunction($function);
 
         $function = new \Twig\TwigFunction('t', \Closure::fromCallable(function (string $text_key) {

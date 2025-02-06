@@ -21,6 +21,7 @@ use App\Models\Company;
 use App\Models\Invoice;
 use App\Libraries\MultiDB;
 use App\Export\CSV\BaseExport;
+use App\Models\Project;
 use App\Utils\Traits\MakesDates;
 use Illuminate\Support\Facades\App;
 use App\Services\Template\TemplateService;
@@ -86,4 +87,31 @@ class ProjectReport extends BaseExport
         return $ts_instance->getPdf();
     }
 
+    private function getTaskAllocationData(Project $project)
+    {
+        $tasks = $project->tasks()->withTrashed()->map(function ($task) {
+            
+            return [
+                'label' => strlen($task->description ?? '') > 0 ? $task->description : $task->number,
+                'hours' => ($task->calcDuration() / 3600)
+            ];
+
+        });
+
+        $taskAllocationData = [
+            'labels' => $tasks->pluck('label'), 
+            'datasets' => [
+                [
+                    'label' => 'Hours Spent',
+                    'data' => $tasks->pluck('hours'), 
+                    'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
+                    'borderColor' => 'rgba(54, 162, 235, 1)',
+                    'borderWidth' => 1
+                ]
+            ]
+        ];
+
+        return $taskAllocationData;
+
+    }
 }
