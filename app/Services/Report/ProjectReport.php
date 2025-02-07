@@ -74,6 +74,7 @@ class ProjectReport extends BaseExport
             'company_name' => $this->company->present()->name(),
             'created_on' => $this->translateDate(now()->format('Y-m-d'), $this->company->date_format(), $this->company->locale()),
             'created_by' => $user_name,
+            'charts' => $this->getCharts($projects),
         ];
 
         $ts = new TemplateService();
@@ -113,5 +114,22 @@ class ProjectReport extends BaseExport
 
         return $taskAllocationData;
 
+    }
+
+    private function getCharts(array $projects)
+    {
+
+        if(!class_exists(Modules\Admin\Services\ChartService::class)) {
+            return [];
+        }
+
+        $chartService = new Modules\Admin\Services\ChartService();
+
+        return $projects->map(function ($project) use ($chartService) {
+            return [
+                'id' => $project->hashed_id,
+                'budgeted_hours' => $chartService->getBudgetedHours($project),
+            ]
+        });
     }
 }

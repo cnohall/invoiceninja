@@ -1081,6 +1081,7 @@ class TemplateService
     {
 
         return [
+            'id' => $project->hashed_id,
             'name' => $project->name ?: '',
             'number' => $project->number ?: '',
             'created_at' => $this->translateDate($project->created_at, $project->client->date_format(), $project->client->locale()),
