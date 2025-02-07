@@ -351,8 +351,7 @@ class TemplateService
 
             $f = $this->document->createDocumentFragment();
 
-            $template = htmlspecialchars($template, ENT_XML1, 'UTF-8');
-
+            // $template = htmlspecialchars($template, ENT_XML1, 'UTF-8'); //2025-02-07 double encoding the entities = bad
             $f->appendXML(str_ireplace("<br>", "<br/>", html_entity_decode($template)));
 
             $replacements[] = $f;
