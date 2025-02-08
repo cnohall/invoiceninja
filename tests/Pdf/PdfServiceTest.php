@@ -210,6 +210,7 @@ class PdfServiceTest extends TestCase
             \Illuminate\Support\Facades\Storage::put('/pdf/template_statements_' . basename($template). '.pdf', $pdf);
 
             $design->forceDelete();
+            $company->forceDelete();
         }
         
     }
