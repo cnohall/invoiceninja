@@ -65,7 +65,7 @@ class ProjectReport extends BaseExport
 
 
         $projects = \App\Models\Project::where('company_id', $this->company->id)
-                                            ->whereIn('id', $this->transformKeys($this->input['projects'])
+                                            ->whereIn('id', $this->transformKeys($this->input['projects']))
                                             ->get();
 
         $data = [

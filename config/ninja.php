@@ -263,4 +263,5 @@ return [
     'e_invoice_quota_warning' => env('E_INVOICE_QUOTA_WARNING', 15),
     'disable_purify_html' => env('DISABLE_PURIFY_HTML', false),
     'zugferd_version_two' => env('ZUGFERD_VERSION_TWO', true),
+    'chart_service_url' => env('CHART_SERVICE_URL', false),
 ];
