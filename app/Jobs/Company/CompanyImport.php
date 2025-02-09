@@ -642,12 +642,15 @@ class CompanyImport implements ShouldQueue
 
     private function import_e_invoicing_tokens()
     {
-        $this->genericNewClassImport(
-            EInvoicingToken::class,
+        $this->genericImportWithoutCompany(
+            \App\Models\EInvoicingToken::class,
             [],
             [],
-            'e_invoicing_tokens'
+            'e_invoicing_tokens',
+            'token'
         );
+
+        return $this;
     }
     
     private function import_schedulers()
@@ -1654,7 +1657,7 @@ class CompanyImport implements ShouldQueue
 
             $new_obj->save(['timestamps' => false]);
 
-            if ($new_obj instanceof CompanyLedger) {
+            if ($new_obj instanceof CompanyLedger || $new_obj instanceof EInvoicingToken) {
             } else {
                 $this->ids["{$object_property}"]["{$obj->hashed_id}"] = $new_obj->id;
             }
