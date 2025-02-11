@@ -53,8 +53,6 @@ class QuickbooksMappingTest extends TestCase
         $post_count = Client::where('company_id', $this->company->id)->count();
 
         $this->assertGreaterThan($pre_count, $post_count);
-
-
         
         $pre_count = Product::where('company_id', $this->company->id)->count();        
         $qb->product->syncToNinja($this->qb_data['products']);
