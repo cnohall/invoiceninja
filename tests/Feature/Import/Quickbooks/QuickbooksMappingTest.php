@@ -8,6 +8,7 @@ use ReflectionClass;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Product;
 use Tests\MockAccountData;
 use Illuminate\Support\Str;
@@ -27,6 +28,7 @@ use Illuminate\Routing\Middleware\ThrottleRequests;
 use QuickBooksOnline\API\Facades\Invoice as QbInvoice;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use App\Services\Quickbooks\Transformers\ClientTransformer;
+
 class QuickbooksMappingTest extends TestCase
 {
     use MockAccountData;
@@ -77,6 +79,14 @@ class QuickbooksMappingTest extends TestCase
 
         $this->assertGreaterThan($pre_count, $post_count);
 
+        $pre_count = Payment::where('company_id', $this->company->id)->count();
+
+        $this->assertGreaterThan(0, count($this->qb_data['payments']));
+        
+        $qb->payment->importToNinja($this->qb_data['payments']);
+        $post_count = Payment::where('company_id', $this->company->id)->count();
+
+        $this->assertGreaterThan($pre_count, $post_count);
                 
         Client::where('company_id', $this->company->id)->cursor()->each(function ($client) {
             $client->forceDelete();

@@ -56,8 +56,6 @@ class QbInvoice implements SyncInterface
                    
             $ninja_invoice_data = $this->invoice_transformer->qbToNinja($record);
 
-            nlog($ninja_invoice_data);
-            
             $payment_ids = $ninja_invoice_data['payment_ids'] ?? [];
 
             $client_id = $ninja_invoice_data['client_id'] ?? null;
@@ -201,12 +199,34 @@ class QbInvoice implements SyncInterface
             if ($invoice->id) {
                 $this->qbInvoiceUpdate($ninja_invoice_data, $invoice);
             }
-nlog($ninja_invoice_data);
             //new invoice scaffold
             $invoice->fill($ninja_invoice_data);
             $invoice->saveQuietly();
 
             $invoice = $invoice->calc()->getInvoice()->service()->markSent()->applyNumber()->createInvitations()->save();
+
+            foreach ($payment_ids as $payment_id) {
+
+                $payment = $this->service->sdk->FindById('Payment', $payment_id);
+
+                $payment_transformer = new PaymentTransformer($this->service->company);
+
+                $transformed = $payment_transformer->qbToNinja($payment);
+
+                $ninja_payment = $payment_transformer->buildPayment($payment);
+                $ninja_payment->service()->applyNumber()->save();
+
+                $paymentable = new \App\Models\Paymentable();
+                $paymentable->payment_id = $ninja_payment->id;
+                $paymentable->paymentable_id = $invoice->id;
+                $paymentable->paymentable_type = 'invoices';
+                $paymentable->amount = $transformed['applied'] + $ninja_payment->credits->sum('amount');
+                $paymentable->created_at = $ninja_payment->date; //@phpstan-ignore-line
+                $paymentable->save();
+
+                $invoice->service()->applyPayment($ninja_payment, $paymentable->amount);
+
+            }
 
             if ($record instanceof \QuickBooksOnline\API\Data\IPPSalesReceipt) {
                 $invoice->service()->markPaid()->save();
