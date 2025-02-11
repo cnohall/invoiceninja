@@ -99,8 +99,6 @@ class QuickbooksService
             nlog("Checking default accounts for company {$this->company->company_key}");
             $accounts = $this->sdk->Query($accountQuery);
 
-            nlog($accounts);
-
             $find_income_account = true;
             $find_expense_account = true;
 
@@ -188,7 +186,7 @@ class QuickbooksService
      */
     public function syncable(string $entity, \App\Enum\SyncDirection $direction): bool
     {
-        return $this->settings->{$entity}->direction === $direction || $this->settings->{$entity}->direction === \App\Enum\SyncDirection::BIDIRECTIONAL;
+        return isset($this->settings->{$entity}->direction) && ($this->settings->{$entity}->direction === $direction || $this->settings->{$entity}->direction === \App\Enum\SyncDirection::BIDIRECTIONAL);
     }
 
 }

@@ -49,6 +49,55 @@ class QbInvoice implements SyncInterface
 
     }
 
+    public function importToNinja(array $records): void
+    {
+
+        foreach ($records as $record) {
+                   
+            $ninja_invoice_data = $this->invoice_transformer->qbToNinja($record);
+
+            $payment_ids = $ninja_invoice_data['payment_ids'] ?? [];
+
+            $client_id = $ninja_invoice_data['client_id'] ?? null;
+
+            if (is_null($client_id)) {
+                continue;
+            }
+
+            unset($ninja_invoice_data['payment_ids']);
+
+            if ($invoice = $this->findInvoice($ninja_invoice_data['id'], $ninja_invoice_data['client_id'])) {
+
+                if ($invoice->id) {
+                    $this->qbInvoiceUpdate($ninja_invoice_data, $invoice);
+                }
+
+                if(Invoice::where('company_id', $this->service->company->id)
+                    ->whereNotNull('number')
+                    ->where('number', $ninja_invoice_data['number'])
+                    ->exists()) {
+                    $ninja_invoice_data['number'] = 'qb_'.$ninja_invoice_data['number'].'_'.rand(1000, 99999);
+                }
+
+                    $invoice->fill($ninja_invoice_data);
+                    $invoice->saveQuietly();
+                
+
+                $invoice = $invoice->calc()->getInvoice()->service()->markSent()->applyNumber()->createInvitations()->save();
+
+                if ($record instanceof \QuickBooksOnline\API\Data\IPPSalesReceipt) {
+                    $invoice->service()->markPaid()->save();
+                }
+
+            }
+
+            $ninja_invoice_data = false;
+
+
+        }
+
+    }
+
     public function syncToForeign(array $records): void
     {
 
@@ -99,7 +148,6 @@ class QbInvoice implements SyncInterface
 
         $qb_record = $this->find($id);
 
-        nlog($qb_record);
 
         if ($this->service->syncable('invoice', \App\Enum\SyncDirection::PULL)) {
 
@@ -117,7 +165,6 @@ class QbInvoice implements SyncInterface
                 $this->syncNinjaInvoice($qb_record);
             } elseif (Carbon::parse($last_updated)->gt(Carbon::parse($invoice->updated_at)) || $qb_record->SyncToken == '0') {
                 $ninja_invoice_data = $this->invoice_transformer->qbToNinja($qb_record);
-                nlog($ninja_invoice_data);
 
                 $this->invoice_repository->save($ninja_invoice_data, $invoice);
 
@@ -137,8 +184,6 @@ class QbInvoice implements SyncInterface
 
         $ninja_invoice_data = $this->invoice_transformer->qbToNinja($record);
 
-        nlog($ninja_invoice_data);
-
         $payment_ids = $ninja_invoice_data['payment_ids'] ?? [];
 
         $client_id = $ninja_invoice_data['client_id'] ?? null;
@@ -154,44 +199,18 @@ class QbInvoice implements SyncInterface
             if ($invoice->id) {
                 $this->qbInvoiceUpdate($ninja_invoice_data, $invoice);
             }
-
+nlog($ninja_invoice_data);
             //new invoice scaffold
             $invoice->fill($ninja_invoice_data);
             $invoice->saveQuietly();
 
             $invoice = $invoice->calc()->getInvoice()->service()->markSent()->applyNumber()->createInvitations()->save();
 
-            foreach ($payment_ids as $payment_id) {
-
-                $payment = $this->service->sdk->FindById('Payment', $payment_id);
-
-                $payment_transformer = new PaymentTransformer($this->service->company);
-
-                $transformed = $payment_transformer->qbToNinja($payment);
-
-                $ninja_payment = $payment_transformer->buildPayment($payment);
-                $ninja_payment->service()->applyNumber()->save();
-
-                $paymentable = new \App\Models\Paymentable();
-                $paymentable->payment_id = $ninja_payment->id;
-                $paymentable->paymentable_id = $invoice->id;
-                $paymentable->paymentable_type = 'invoices';
-                $paymentable->amount = $transformed['applied'] + $ninja_payment->credits->sum('amount');
-                $paymentable->created_at = $ninja_payment->date; //@phpstan-ignore-line
-                $paymentable->save();
-
-                $invoice->service()->applyPayment($ninja_payment, $paymentable->amount);
-
-            }
-
             if ($record instanceof \QuickBooksOnline\API\Data\IPPSalesReceipt) {
                 $invoice->service()->markPaid()->save();
             }
 
         }
-
-        $ninja_invoice_data = false;
-
 
     }
 

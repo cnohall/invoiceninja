@@ -52,8 +52,6 @@ class QuickbooksTest extends TestCase
         $this->faker = \Faker\Factory::create();
     }
 
-
-
     public function createQbProduct()
     {
         $service_product = Product::factory()->create([
