@@ -40,6 +40,11 @@ class QuickbooksMappingTest extends TestCase
     {
         parent::setUp();      
     
+        if(config('ninja.is_travis'))
+        {
+            $this->markTestSkipped('No need to run this test on Travis');
+        }
+
         $this->qb_data = json_decode(file_get_contents($this->backup_file), true);
 
         $this->makeTestData();
