@@ -99,7 +99,7 @@ class SendEmailRequest extends Request
         }
 
         if($input['entity'] == 'purchaseOrder'){
-            $input['entity'] = "App\Models\PurchaseOrder";
+            $this->entity_plural = "purchase_orders";
         }
 
         if (isset($input['cc_email'])) {
