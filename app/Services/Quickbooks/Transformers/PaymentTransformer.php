@@ -71,13 +71,13 @@ class PaymentTransformer extends BaseTransformer
             $tx_type = data_get($item, 'LinkedTxn.TxnType', false);
             $amount = data_get($item, 'Amount', 0);
 
-            if($tx_type == 'Invoice' && $id == $invoice->sync->qb_id) {
+            if($tx_type == 'Invoice' && $id == $invoice->sync->qb_id && $amount > 0) {
 
                 $paymentable = new \App\Models\Paymentable();
                 $paymentable->payment_id = $payment->id;
                 $paymentable->paymentable_id = $invoice->id;
                 $paymentable->paymentable_type = 'invoices';
-                $paymentable->amount = $related_invoice['amount'];
+                $paymentable->amount = $amount;
                 $paymentable->created_at = $payment->date; //@phpstan-ignore-line
                 $paymentable->save();
 
