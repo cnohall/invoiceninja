@@ -17,6 +17,7 @@ use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\DataMapper\InvoiceItem;
+use App\Models\TaxRate;
 
 /**
  * Class InvoiceTransformer.
@@ -52,6 +53,7 @@ class InvoiceTransformer extends BaseTransformer
             'tax_rate1' => $rate = $this->calculateTotalTax($qb_data),
             'tax_name1' => $rate > 0 ? "Sales Tax" : "",
             'custom_surcharge1' => $this->checkIfDiscountAfterTax($qb_data),
+            'balance' => data_get($qb_data, 'Balance', 0),
 
         ] : false;
     }
@@ -81,18 +83,48 @@ class InvoiceTransformer extends BaseTransformer
 
     private function calculateTotalTax($qb_data)
     {
-        $taxLines = data_get($qb_data, 'TxnTaxDetail.TaxLine', []);
+        $total_tax = data_get($qb_data,'TxnTaxDetail.TotalTax', false);
 
-        if (!is_array($taxLines)) {
+        if($total_tax == "0") {
+            return 0;
+        }
+
+        $taxLines = data_get($qb_data, 'TxnTaxDetail.TaxLine', []) ?? [];
+    
+        if (!empty($taxLines) && !isset($taxLines[0])) {
             $taxLines = [$taxLines];
         }
 
         $totalTaxRate = 0;
 
+        nlog($taxLines);
+
         foreach ($taxLines as $taxLine) {
             $taxRate = data_get($taxLine, 'TaxLineDetail.TaxPercent', 0);
             $totalTaxRate += $taxRate;
         }
+
+
+        if ($totalTaxRate > 0) {
+            $formattedTaxRate = rtrim(rtrim(number_format($totalTaxRate, 6), '0'), '.');
+            $formattedTaxRate = trim($formattedTaxRate);
+
+            $tr = \App\Models\TaxRate::firstOrNew(
+                [
+                'company_id' => $this->company->id,
+                'rate' => $formattedTaxRate,
+                ],
+                [
+                'name' => "Sales Tax [{$formattedTaxRate}]",
+                'rate' => $formattedTaxRate,
+                ]
+            );
+            $tr->company_id = $this->company->id;
+            $tr->user_id = $this->company->owner()->id;
+            $tr->save();
+        }
+        // ... exi
+
 
         return (float)$totalTaxRate;
     }
