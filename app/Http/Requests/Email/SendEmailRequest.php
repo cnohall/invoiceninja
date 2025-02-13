@@ -98,6 +98,10 @@ class SendEmailRequest extends Request
             $input['entity'] = "App\Models\\".ucfirst(Str::camel($input['entity']));
         }
 
+        if($input['entity'] == 'purchaseOrder'){
+            $this->entity_plural = "purchase_orders";
+        }
+
         if (isset($input['cc_email'])) {
             $input['cc_email'] = collect(explode(",", $input['cc_email']))->map(function ($email) {
                 return trim($email);
@@ -124,6 +128,11 @@ class SendEmailRequest extends Request
 
         /** @var \App\Models\User $user */
         $user = auth()->user();
+
+        if (Ninja::isHosted() && !$user->email_verified_at) {
+            $this->error_message = ctrans('texts.verify_email');
+            return false;
+        }
 
         if (Ninja::isHosted() && !$user->account->account_sms_verified) {
             $this->error_message = ctrans('texts.authorization_sms_failure');

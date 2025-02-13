@@ -92,7 +92,7 @@ class License extends StaticModel
      */
     public function e_invoicing_tokens()
     {
-        return $this->hasMany(EInvoicingToken::class, 'license_key', 'license_key');
+        return $this->hasMany(EInvoicingToken::class, 'license', 'license_key');
     }
 
     /**
@@ -130,9 +130,11 @@ class License extends StaticModel
             return;
         }
 
-        $this->entities = array_filter($this->entities, function ($existingEntity) use ($entity) {
+        $entities = array_filter($this->entities, function ($existingEntity) use ($entity) {
             return $existingEntity->legal_entity_id !== $entity->legal_entity_id;
         });
+
+        $this->entities = $entities;
 
         $this->save();
 
@@ -163,6 +165,16 @@ class License extends StaticModel
         $this->setAttribute('entities', $entities);
         $this->save();
 
+    }
+
+    public function countEntities(): int
+    {
+                
+        if (!is_array($this->entities)) {
+            return 0;
+        }
+
+        return count($this->entities);
     }
 
     public function findEntity(string $key, mixed $value): ?TaxEntity

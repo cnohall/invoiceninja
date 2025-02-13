@@ -59,7 +59,7 @@ class XsltDocumentValidator
 
                 /** @var \Saxon\XsltExecutable $xsltExecutable */
                 $xsltExecutable = $xslt->compileFromFile(app_path($stylesheet)); //@phpstan-ignore-line
-                $result = $xsltExecutable->transformToValue($xdmNode);
+                $result = $xsltExecutable->transformToValue($xdmNode); //@phpstan-ignore-line
 
                 if ($result->size() == 0) {
                     continue;
@@ -108,6 +108,18 @@ class XsltDocumentValidator
         }
 
         return $this;
+    }
+
+    public function setXsd(string $xsd): self
+    {
+        $this->ubl_xsd = $xsd;
+
+        return $this;
+    }
+
+    public function getXsd(): string
+    {
+        return $this->ubl_xsd;
     }
 
     public function setStyleSheets(array $stylesheets): self

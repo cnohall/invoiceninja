@@ -148,6 +148,19 @@ return [
             'throw' => false,
         ],
 
+        'backup' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID_BACKUP'),
+            'secret' => env('R2_SECRET_ACCESS_KEY_BACKUP'),
+            'region' => env('R2_DEFAULT_REGION_BACKUP','auto'),
+            'bucket' => env('R2_BUCKET_BACKUP','auto'),
+            'url' => env('R2_URL_BACKUP'),
+            'visibility' => 'private',
+            'endpoint' => env('R2_ENDPOINT_BACKUP'),
+            'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT_BACKUP', false),
+            'throw' => false,
+        ],
+
     ],
 
     /*

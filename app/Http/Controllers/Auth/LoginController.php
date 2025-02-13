@@ -325,14 +325,18 @@ class LoginController extends BaseController
             return $this->timeConstrainedResponse($cu);
         }
 
-        nlog("socialite");
-        nlog($user);
+        // nlog("socialite");
+        // nlog($user);
 
         $name = OAuth::splitName($user->name);
 
         if ($provider == 'apple') {
             $name[0] = request()->has('first_name') ? request()->input('first_name') : $name[0];
             $name[1] = request()->has('last_name') ? request()->input('last_name') : $name[1];
+        }
+
+        if($provider == 'apple' && !$user->email){
+            return response()->json(['message' => 'This signup method is not supported as no email was provided'], 403);
         }
 
         $new_account = [
@@ -429,8 +433,6 @@ class LoginController extends BaseController
         $user = $graph->createRequest('GET', '/me')
             ->setReturnType(Model\User::class)
             ->execute();
-
-        nlog($user);
 
         if ($user) {
             $account = request()->input('account');

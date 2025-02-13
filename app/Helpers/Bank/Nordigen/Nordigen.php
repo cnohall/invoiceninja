@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invoice Ninja (https://invoiceninja.com).
  *
@@ -23,6 +24,7 @@ use App\Models\Company;
 use App\Services\Email\Email;
 use App\Models\BankIntegration;
 use App\Services\Email\EmailObject;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Mail\Mailables\Address;
@@ -33,7 +35,7 @@ class Nordigen
 {
     public bool $test_mode; // https://developer.gocardless.com/bank-account-data/sandbox
 
-    public string $sandbox_institutionId = "SANDBOXFINANCE_SFIN0000";
+    public string $sandbox_institutionId = 'SANDBOXFINANCE_SFIN0000';
 
     protected \Nordigen\NordigenPHP\API\NordigenClient $client;
 
@@ -60,14 +62,116 @@ class Nordigen
         return $this->client->institution->getInstitutions();
     }
 
-    // requisition-section
-    public function createRequisition(string $redirect, string $initutionId, string $reference, string $userLanguage)
+    /**
+     * Get end user agreement details by ID.
+     *
+     * @return array{
+     *   id: string,
+     *   created: string,
+     *   institution_id: string,
+     *   max_historical_days: int,
+     *   access_valid_for_days: int,
+     *   access_scope: string[],
+     *   accepted: string
+     * } Agreement details
+     */
+    public function getAgreement(string $euaId): array
     {
-        if ($this->test_mode && $initutionId != $this->sandbox_institutionId) {
+        return $this->client->endUserAgreement->getEndUserAgreement($euaId);
+    }
+
+    /**
+     * Get a list of end user agreements
+     *
+     * @return array{
+     *   id: string,
+     *   created: string,
+     *   institution_id: string,
+     *   max_historical_days: int,
+     *   access_valid_for_days: int,
+     *   access_scope: string[],
+     *   accepted: ?string,
+     * }[] EndUserAgreement list
+     */
+    public function firstValidAgreement(string $institutionId, int $accessDays, int $txDays): ?array
+    {
+        $requiredScopes = ['balances', 'details', 'transactions'];
+
+        try {
+            return Arr::first(
+                $this->client->endUserAgreement->getEndUserAgreements()['results'],
+                function (array $eua) use ($institutionId, $requiredScopes, $accessDays, $txDays): bool {
+                    return $eua['institution_id'] === $institutionId
+                        && $eua['accepted'] === null
+                        && $eua['max_historical_days'] >= $txDays
+                        && $eua['access_valid_for_days'] >= $accessDays
+                        && !array_diff($requiredScopes, $eua['access_scope'] ?? []);
+                },
+                null
+            );
+        } catch (\Exception $e) {
+            $debug = "{$e->getMessage()} ({$e->getCode()})";
+
+            nlog("Nordigen: Unable to fetch End User Agreements for institution '{$institutionId}': {$debug}");
+
+            return null;
+        }
+    }
+
+    /**
+     * Create a new End User Agreement with the given parameters
+     *
+     * @param array{id: string, transaction_total_days: int, max_access_valid_for_days: int} $institution
+     *
+     * @throws \Nordigen\NordigenPHP\Exceptions\NordigenExceptions\NordigenException
+     *
+     * @return array{
+     *   id: string,
+     *   created: string,
+     *   institution_id: string,
+     *   max_historical_days: int,
+     *   access_valid_for_days: int,
+     *   access_scope: string[],
+     *   accepted: string
+     * } Agreement details
+     */
+    public function createAgreement(array $institution, int $accessDays, int $transactionDays): array
+    {
+        $txDays = $transactionDays < 30 ? 30 : $transactionDays;
+        $maxAccess = $institution['max_access_valid_for_days'];
+        $maxTx = $institution['transaction_total_days'];
+
+        return $this->client->endUserAgreement->createEndUserAgreement(
+            accessValidForDays: $accessDays > $maxAccess ? $maxAccess : $accessDays,
+            maxHistoricalDays: $txDays > $maxTx ? $maxTx : $txDays,
+            institutionId: $institution['id'],
+        );
+    }
+
+    /**
+     * Create a new Bank Requisition
+     *
+     * @param array{id: ?string} $institution,
+     * @param array{id: ?string, transaction_total_days: int} $agreement
+     */
+    public function createRequisition(
+        string $redirect,
+        array $institution,
+        array $agreement,
+        string $reference,
+        string $userLanguage,
+    ): array {
+        if ($this->test_mode && $institution['id'] != $this->sandbox_institutionId) {
             throw new \Exception('invalid institutionId while in test-mode');
         }
 
-        return $this->client->requisition->createRequisition($redirect, $initutionId, null, $reference, $userLanguage);
+        return $this->client->requisition->createRequisition(
+            $redirect,
+            $institution['id'],
+            $agreement['id'] ?? null,
+            $reference,
+            $userLanguage
+        );
     }
 
     public function getRequisition(string $requisitionId)
@@ -75,7 +179,7 @@ class Nordigen
         try {
             return $this->client->requisition->getRequisition($requisitionId);
         } catch (\Exception $e) {
-            if (strpos($e->getMessage(), "Invalid Requisition ID") !== false) {
+            if (strpos($e->getMessage(), 'Invalid Requisition ID') !== false) {
                 return false;
             }
 
@@ -89,10 +193,10 @@ class Nordigen
         try {
             $out = new \stdClass();
 
-            $out->data = $this->client->account($account_id)->getAccountDetails()["account"];
+            $out->data = $this->client->account($account_id)->getAccountDetails()['account'];
             $out->metadata = $this->client->account($account_id)->getAccountMetaData();
-            $out->balances = $this->client->account($account_id)->getAccountBalances()["balances"];
-            $out->institution = $this->client->institution->getInstitution($out->metadata["institution_id"]);
+            $out->balances = $this->client->account($account_id)->getAccountBalances()['balances'];
+            $out->institution = $this->client->institution->getInstitution($out->metadata['institution_id']);
 
             $it = new AccountTransformer();
             return $it->transform($out);
@@ -108,7 +212,7 @@ class Nordigen
         } catch (\Exception $e) {
 
             nlog("Nordigen getAccount() failed => {$account_id} => " . $e->getMessage());
-            return ['error' => $e->getMessage()];
+            return ['error' => $e->getMessage(), 'requisition' => true];
 
         }
     }
@@ -124,8 +228,9 @@ class Nordigen
         try {
             $account = $this->client->account($account_id)->getAccountMetaData();
 
-            if ($account["status"] != "READY") {
-                nlog('nordigen account was not in status ready. accountId: ' . $account_id . ' status: ' . $account["status"]);
+            if ($account['status'] != 'READY') {
+                nlog("Nordigen account '{$account_id}' is not ready (status={$account['status']})");
+
                 return false;
             }
 
@@ -134,7 +239,7 @@ class Nordigen
 
             nlog("Nordigen:: AccountActiveStatus:: {$e->getMessage()} {$e->getCode()}");
 
-            if (strpos($e->getMessage(), "Invalid Account ID") !== false) {
+            if (strpos($e->getMessage(), 'Invalid Account ID') !== false) {
                 return false;
             }
 

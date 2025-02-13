@@ -65,7 +65,12 @@ class PostMarkController extends BaseController
     public function webhook(Request $request)
     {
         if ($request->header('X-API-SECURITY') && $request->header('X-API-SECURITY') == config('services.postmark.token')) {
-            ProcessPostmarkWebhook::dispatch($request->all())->delay(rand(6, 14));
+            ProcessPostmarkWebhook::dispatch($request->all(), $request->header('X-API-SECURITY'))->delay(15);
+
+            return response()->json(['message' => 'Success'], 200);
+        }
+        elseif($request->header('X-API-SECURITY') && stripos($request->header('X-API-SECURITY'), \Illuminate\Support\Facades\Cache::get('client_postmark_keys')) !== false){
+            ProcessPostmarkWebhook::dispatch($request->all(), $request->header('X-API-SECURITY'))->delay(15);
 
             return response()->json(['message' => 'Success'], 200);
         }
@@ -282,6 +287,14 @@ class PostMarkController extends BaseController
             return response()->json(['message' => 'Failed. Missing/Invalid Parameters.'], 400);
         }
 
+        $inboundEngine = new InboundMailEngine();
+
+        // Spam protection
+        if ($inboundEngine->isInvalidOrBlocked($input["From"], $input["ToFull"][0]["Email"])) {
+            return;
+        }
+
+        // match company
         $company = MultiDB::findAndSetDbByExpenseMailbox($input["ToFull"][0]["Email"]);
 
         if (!$company) {
@@ -289,11 +302,7 @@ class PostMarkController extends BaseController
             return response()->json(['message' => 'Ok'], 200);
         }
 
-        $inboundEngine = new InboundMailEngine($company);
-
-        if ($inboundEngine->isInvalidOrBlocked($input["From"], $input["ToFull"][0]["Email"])) {
-            return response()->json(['message' => 'Blocked.'], 403);
-        }
+        $inboundEngine->setCompany($company);
 
         try { // important to save meta if something fails here to prevent spam
 

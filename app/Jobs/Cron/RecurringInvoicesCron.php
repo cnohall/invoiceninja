@@ -55,11 +55,14 @@ class RecurringInvoicesCron
                                                         ->whereNull('deleted_at')
                                                         ->where('next_send_date', '<=', now()->toDateTimeString())
                                                         ->whereHas('client', function ($query) {
-                                                            $query->where('is_deleted', 0)
-                                                                   ->where('deleted_at', null);
+                                                            $query->where('is_deleted', false)
+                                                                   ->whereNull('deleted_at');
                                                         })
                                                         ->whereHas('company', function ($query) {
-                                                            $query->where('is_disabled', 0);
+                                                            $query->where('is_disabled', 0)
+                                                                  ->whereHas('account', function ($q){
+                                                                        $q->where('is_flagged', false);
+                                                                  });
                                                         })
                                                         ->with('company')
                                                         ->cursor();
@@ -94,11 +97,15 @@ class RecurringInvoicesCron
                                                         ->whereNotNull('next_send_date')
                                                         ->where('next_send_date', '<=', now()->toDateTimeString())
                                                         ->whereHas('client', function ($query) {
-                                                            $query->where('is_deleted', 0)
-                                                                   ->where('deleted_at', null);
+                                                                $query->where('is_deleted', false)
+                                                                   ->whereNull('deleted_at');
+
                                                         })
                                                         ->whereHas('company', function ($query) {
-                                                            $query->where('is_disabled', 0);
+                                                            $query->where('is_disabled', 0)
+                                                                  ->whereHas('account', function ($q){
+                                                                        $q->where('is_flagged', false);
+                                                                  });
                                                         })
                                                         ->with('company')
                                                         ->cursor();

@@ -56,6 +56,9 @@ class CheckClientExistence
         }
 
         if (count($multiple_contacts) == 1 && ! Auth::guard('contact')->check()) {
+            
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
             Auth::guard('contact')->loginUsingId($multiple_contacts[0]->id, true);
 
             auth()->guard('contact')->user()->loadMissing(['client' => function ($query) {

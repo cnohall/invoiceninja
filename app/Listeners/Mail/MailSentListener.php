@@ -23,7 +23,7 @@ use App\Models\RecurringInvoiceInvitation;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Symfony\Component\Mime\MessageConverter;
 
-class MailSentListener implements ShouldQueue
+class MailSentListener
 {
     /**
      * Create the event listener.
@@ -42,7 +42,7 @@ class MailSentListener implements ShouldQueue
      */
     public function handle(MessageSent $event)
     {
-
+        
         try {
             $message_id = $event->sent->getMessageId();
 
@@ -61,6 +61,7 @@ class MailSentListener implements ShouldQueue
                     return;
                 }
 
+                $invitation->sent_date = now();
                 $invitation->message_id = str_replace(["<",">"], "", $message_id);
                 $invitation->save();
             }

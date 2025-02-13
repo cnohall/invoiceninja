@@ -579,11 +579,10 @@ class Mutator implements MutatorInterface
     private function getClientPublicIdentifier(string $code): string
     {
         if ($this->invoice->client->classification == 'individual' && strlen($this->invoice->client->id_number ?? '') > 2) {
-            return $this->invoice->client->id_number;
+            return preg_replace("/[^a-zA-Z0-9]/", "", $this->invoice->client->id_number ?? '');
         }
 
-        // elseif($this->invoice->client->classification == 'business')
-        return $this->invoice->client->vat_number;
+        return preg_replace("/[^a-zA-Z0-9]/", "", $this->invoice->client->vat_number ?? '');
     }
 
     public function setClientRoutingCode(): self
@@ -613,6 +612,8 @@ class Mutator implements MutatorInterface
             $identifier = $this->getClientPublicIdentifier($code);
         }
 
+        $identifier = str_ireplace(["FR","BE"],"", $identifier);
+        $identifier = preg_replace("/[^a-zA-Z0-9]/", "", $identifier);
 
         $this->setStorecoveMeta($this->buildRouting([
                 ["scheme" => $code, "id" => $identifier]

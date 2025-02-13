@@ -77,6 +77,39 @@ class QbClient implements SyncInterface
 
     }
 
+    public function importToNinja(array $records): void
+    {
+
+        $transformer = new ClientTransformer($this->service->company);
+
+        foreach ($records as $record) {
+
+            $ninja_data = $transformer->qbToNinja($record);
+
+            if ($client = $this->findClient($ninja_data[0]['id'])) {
+
+                $client->fill($ninja_data[0]);
+                $client->service()->applyNumber()->save();
+
+                $contact = $client->contacts()->where('email', $ninja_data[1]['email'])->first();
+
+                if (!$contact) {
+                    $contact = ClientContactFactory::create($this->service->company->id, $this->service->company->owner()->id);
+                    $contact->client_id = $client->id;
+                    $contact->send_email = true;
+                    $contact->is_primary = true;
+                    $contact->fill($ninja_data[1]);
+                    $contact->saveQuietly();
+                } elseif ($this->service->syncable('client', \App\Enum\SyncDirection::PULL)) {
+                    $contact->fill($ninja_data[1]);
+                    $contact->saveQuietly();
+                }
+
+            }
+        }
+
+    }
+
     public function syncToForeign(array $records): void
     {
     }

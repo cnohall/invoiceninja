@@ -12,18 +12,20 @@
 
 namespace App\Livewire\BillingPortal;
 
+use App\Utils\Ninja;
+use Livewire\Component;
 use App\Libraries\MultiDB;
-use App\Livewire\BillingPortal\Authentication\Login;
-use App\Livewire\BillingPortal\Authentication\Register;
-use App\Livewire\BillingPortal\Authentication\RegisterOrLogin;
-use App\Livewire\BillingPortal\Cart\Cart;
-use App\Livewire\BillingPortal\Payments\Methods;
+use Illuminate\Support\Str;
+use Livewire\Attributes\On;
 use App\Models\Subscription;
 use App\Utils\Traits\MakesHash;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\On;
-use Livewire\Component;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\App;
+use App\Livewire\BillingPortal\Cart\Cart;
+use App\Livewire\BillingPortal\Payments\Methods;
+use App\Livewire\BillingPortal\Authentication\Login;
+use App\Livewire\BillingPortal\Authentication\Register;
+use App\Livewire\BillingPortal\Authentication\RegisterOrLogin;
 
 class Purchase extends Component
 {
@@ -115,11 +117,10 @@ class Purchase extends Component
         return "summary-{$this->id}";
     }
 
-
     #[Computed()]
     public function subscription()
     {
-        return Subscription::find($this->decodePrimaryKey($this->subscription_id))->withoutRelations()->makeHidden(['webhook_configuration','steps']);
+        return Subscription::find($this->decodePrimaryKey($this->subscription_id))?->withoutRelations()?->makeHidden(['webhook_configuration','steps']);
     }
 
     public static function defaultSteps()
@@ -138,11 +139,21 @@ class Purchase extends Component
 
         $sub = Subscription::find($this->decodePrimaryKey($this->subscription_id));
 
+
+        if(!$sub){
+
+
+            session()->flash('title', __('texts.subscription_unavailable'));
+            session()->flash('notification', '');
+
+            return redirect()->route('client.error');
+
+        }
+        
         if ($sub->steps) {
             $steps = collect(explode(',', $sub->steps))
                 ->map(fn ($step) => $classes[$step])
                 ->toArray();
-
             $this->steps = [
                 Setup::class,
                 ...$steps,
@@ -166,7 +177,8 @@ class Purchase extends Component
             ->handleContext('hash', $this->hash)
             ->handleContext('quantity', 1)
             ->handleContext('request_data', $this->request_data)
-            ->handleContext('campaign', $this->campaign);
+            ->handleContext('campaign', $this->campaign)
+            ->handleContext('subcription_id', $this->subscription_id);
     }
 
     public function render()

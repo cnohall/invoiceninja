@@ -18,8 +18,10 @@ use App\Services\EDocument\Gateway\Storecove\Storecove;
 use App\Http\Requests\EInvoice\Peppol\DisconnectRequest;
 use App\Http\Requests\EInvoice\Peppol\AddTaxIdentifierRequest;
 use App\Http\Requests\EInvoice\Peppol\RemoveTaxIdentifierRequest;
+use App\Http\Requests\EInvoice\Peppol\RetrySendRequest;
 use App\Http\Requests\EInvoice\Peppol\ShowEntityRequest;
 use App\Http\Requests\EInvoice\Peppol\UpdateEntityRequest;
+use App\Services\EDocument\Jobs\SendEDocument;
 
 class EInvoicePeppolController extends BaseController
 {
@@ -58,6 +60,8 @@ class EInvoicePeppolController extends BaseController
             ->setCompany($company)
             ->setup($request->validated());
 
+            nlog($response);
+
         if (data_get($response, 'status') === 'error') {
             return response()->json(data_get($response, 'message'), status: $response['code']);
         }
@@ -79,8 +83,15 @@ class EInvoicePeppolController extends BaseController
         $settings->state = $request->county;
         $settings->postal_code = $request->zip;
 
+        $settings->tax_name1 = '';
+        $settings->tax_rate1 = 0;
+        $settings->tax_name2 = '';
+        $settings->tax_rate2 = 0;
+        $settings->tax_name3 = '';
+        $settings->tax_rate3 = 0;
+        
         $settings->e_invoice_type = 'PEPPOL';
-        $settings->vat_number = $request->vat_number ?? $company->settings->vat_number;
+        // $settings->vat_number = $request->vat_number ?? $company->settings->vat_number;
         $settings->id_number = $request->id_number ?? $company->settings->id_number;
         $settings->classification = $request->classification ?? $company->settings->classification;
         $settings->enable_e_invoice = true;
@@ -249,6 +260,14 @@ class EInvoicePeppolController extends BaseController
         $company->save();
 
         return response()->json([]);
+    }
+
+    public function retrySend(RetrySendRequest $request)
+    {
+        
+        SendEDocument::dispatch($request->entity, $request->entity_id, auth()->user()->company()->db);
+
+        return response()->json(['message' => 'trying....'], 200);
     }
 
     private function unsetVatNumbers(mixed $taxData): mixed

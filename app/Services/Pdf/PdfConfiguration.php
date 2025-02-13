@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invoice Ninja (https://invoiceninja.com).
  *
@@ -394,15 +395,9 @@ class PdfConfiguration
         $v = rtrim(sprintf('%f', $value), '0');
         $parts = explode('.', $v);
 
-        /* 08-02-2023 special if block to render $0.5 to $0.50*/
-        if ($v < 1 && strlen($v) == 3) {
-            $precision = 2;
-        } elseif ($v < 1) {
-            $precision = strlen($v) - strrpos($v, '.') - 1;
-        }
-
-        if (is_array($parts) && $parts[0] != 0) {
-            $precision = 2;
+        /** 2024-12-09 improve resolution of unit cost precision */
+        if (strlen($parts[1] ?? '') > 2) {
+            $precision = strlen($parts[1]);
         }
 
         //04-04-2023 if currency = JPY override precision to 0

@@ -116,12 +116,10 @@ class AutoBillInvoice extends AbstractService
 
         nlog("Gateway present - adding gateway fee on {$amount}");
 
+        $payment_hash_string = Str::random(32);
+
         /* $gateway fee */
-        $this->invoice = $this->invoice->service()->addGatewayFee($gateway_token->gateway, $gateway_token->gateway_type_id, $amount)->save();
-
-
-        nlog($this->invoice->amount);
-        nlog($this->invoice->balance);
+        $this->invoice = $this->invoice->service()->addGatewayFee($gateway_token->gateway, $gateway_token->gateway_type_id, $amount, $payment_hash_string)->save();
 
         //change from $this->invoice->amount to $this->invoice->balance
         if ($is_partial) {
@@ -139,7 +137,7 @@ class AutoBillInvoice extends AbstractService
         /* Build payment hash */
 
         $payment_hash = PaymentHash::create([
-            'hash' => Str::random(32),
+            'hash' => $payment_hash_string,
             'data' => [
                 'amount_with_fee' => $amount + $fee,
                 'invoices' => [
@@ -167,24 +165,20 @@ class AutoBillInvoice extends AbstractService
 
             nlog('payment NOT captured for '.$this->invoice->number.' with error '.$e->getMessage());
             event(new InvoiceAutoBillFailed($this->invoice, $this->invoice->company, Ninja::eventVars(), $e->getMessage()));
+            
+            $this->invoice->increment('auto_bill_tries', 1);
+            $this->invoice->refresh();
 
-        }
+            if ($this->invoice->auto_bill_tries == 3) {
 
-        $this->invoice = $this->invoice->fresh();
-        $this->invoice->auto_bill_tries += 1;
+                \App\Models\Invoice::where('id', $this->invoice->id)->update([
+                    'auto_bill_enabled' => false,
+                    'auto_bill_tries' => 0
+                ]);
 
-        if ($this->invoice->auto_bill_tries == 3) {
+            }
 
-            \App\Models\Invoice::where('id', $this->invoice->id)->update([
-                'auto_bill_enabled' => false,
-                'auto_bill_tries' => 0
-            ]);
-
-        } else {
-
-            \App\Models\Invoice::where('id', $this->invoice->id)->update([
-                'auto_bill_tries' => $this->invoice->auto_bill_tries
-            ]);
+            throw $e;
 
         }
 

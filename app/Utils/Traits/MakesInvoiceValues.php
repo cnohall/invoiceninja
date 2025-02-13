@@ -19,6 +19,8 @@ use Illuminate\Support\Str;
 
 /**
  * Class MakesInvoiceValues.
+ * 
+ * Quite possibly this is now @deprecated 2025-02-04
  */
 trait MakesInvoiceValues
 {
@@ -278,10 +280,8 @@ trait MakesInvoiceValues
                 }
             }
 
-            if ($table_type == '$task' && $item->type_id != 2) {
-                // if ($item->type_id != 4 && $item->type_id != 5) {
+            if (($table_type == '$task' && $item->type_id != 2)) {
                 continue;
-                // }
             }
 
             $helpers = new Helpers();

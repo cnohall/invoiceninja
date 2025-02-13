@@ -328,7 +328,13 @@ trait GeneratesCounter
         $counter = $expense->company->settings->expense_number_counter;
         $setting_entity = $expense->company->settings->expense_number_counter;
 
-        $expense_number = $this->checkEntityNumber(Expense::class, $expense, $counter, $expense->company->settings->counter_padding, $expense->company->settings->expense_number_pattern);
+        $pattern = $expense->company->settings->expense_number_pattern;
+        
+        if (strlen($pattern) > 1 && (stripos($pattern, 'counter') === false)) {
+            $pattern = $pattern.'{$counter}';
+        }
+
+        $expense_number = $this->checkEntityNumber(Expense::class, $expense, $counter, $expense->company->settings->counter_padding, $pattern);
 
         $this->incrementCounter($expense->company, 'expense_number_counter');
 
@@ -528,17 +534,15 @@ trait GeneratesCounter
         $reset_counter_frequency = (int) $client->getSetting('reset_counter_frequency_id');
         $settings_entity = $client->getSettingEntity('reset_counter_frequency_id');
         $settings = $settings_entity->settings;
-
+        
         if ($reset_counter_frequency == 0) {
+            
             if ($client->getSetting('reset_counter_date')) {
-                // $settings = $client->company->settings;
                 $settings->reset_counter_date = "";
                 $settings_entity->settings = $settings;
                 $settings_entity->saveQuietly();
-                // $client->company->settings = $settings;
-                // $client->company->save();
             }
-
+            
             return;
         }
 

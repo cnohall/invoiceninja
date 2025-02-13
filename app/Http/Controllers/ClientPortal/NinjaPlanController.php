@@ -54,6 +54,8 @@ class NinjaPlanController extends Controller
         if (MultiDB::findAndSetDbByContactKey($contact_key) && $client_contact = ClientContact::where('contact_key', $contact_key)->first()) {
             nlog('Ninja Plan Controller - Found and set Client Contact');
 
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
             Auth::guard('contact')->loginUsingId($client_contact->id, true);
 
             return $this->plan();
