@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invoice Ninja (https://invoiceninja.com).
  *
@@ -442,16 +443,16 @@ class ProcessPostmarkWebhook implements ShouldQueue
         }
     }
 
-    public function middleware()
-    {
-        $key = $this->request['MessageID'] ?? '' . $this->request['Tag'] ?? '';
-        return [(new \Illuminate\Queue\Middleware\WithoutOverlapping($key))->releaseAfter(60)];
-    }
+    // public function middleware()
+    // {
+    //     $key = $this->request['MessageID'] ?? '' . $this->request['Tag'] ?? '';
+    //     return [(new \Illuminate\Queue\Middleware\WithoutOverlapping($key))->releaseAfter(60)];
+    // }
 
     public function failed($exception = null)
     {
-        
-        if($exception) {
+
+        if ($exception) {
             nlog("PROCESSPOSTMARKWEBHOOK:: ". $exception->getMessage());
         }
 

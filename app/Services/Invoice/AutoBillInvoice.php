@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invoice Ninja (https://invoiceninja.com).
  *
@@ -58,7 +59,7 @@ class AutoBillInvoice extends AbstractService
         $is_partial = false;
 
         /* Is the invoice payable? */
-        if (! $this->invoice->isPayable()) {
+        if (! $this->invoice->refresh()->isPayable()) {
             return $this->invoice;
         }
 
@@ -165,7 +166,7 @@ class AutoBillInvoice extends AbstractService
 
             nlog('payment NOT captured for '.$this->invoice->number.' with error '.$e->getMessage());
             event(new InvoiceAutoBillFailed($this->invoice, $this->invoice->company, Ninja::eventVars(), $e->getMessage()));
-            
+
             $this->invoice->increment('auto_bill_tries', 1);
             $this->invoice->refresh();
 

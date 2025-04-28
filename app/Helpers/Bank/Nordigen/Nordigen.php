@@ -207,12 +207,12 @@ class Nordigen
 
             if ($statusCode === 429) {
                 nlog("Nordigen Rate Limit hit for account {$account_id}");
-                return ['error' => 'Nordigen Institution Rate Limit Reached'];
+                return ['error' => 'Nordigen Institution Rate Limit Reached', 'code' => 429];
             }
         } catch (\Exception $e) {
 
             nlog("Nordigen getAccount() failed => {$account_id} => " . $e->getMessage());
-            return ['error' => $e->getMessage(), 'requisition' => true];
+            return ['error' => $e->getMessage(), 'requisition' => true, 'code' => 401];
 
         }
     }
@@ -271,6 +271,8 @@ class Nordigen
             return;
         }
 
+        Cache::put($cache_key, true, 60 * 60 * 24);
+
         App::setLocale($bank_integration->company->getLocale());
 
         $mo = new EmailObject();
@@ -285,7 +287,7 @@ class Nordigen
 
         Email::dispatch($mo, $bank_integration->company);
 
-        Cache::put($cache_key, true, 60 * 60 * 24);
+
 
     }
 

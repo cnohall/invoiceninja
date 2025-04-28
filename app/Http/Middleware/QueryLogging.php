@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invoice Ninja (https://invoiceninja.com).
  *
@@ -87,6 +88,7 @@ class QueryLogging
             }
 
             LightLogs::create(new DbQuery($request->method(), substr(urldecode($request->url()), 0, 180), $count, $time, $ip, $client_version, $platform))
+                ->probe($request, $ip, true)
                 ->batch();
         }
 

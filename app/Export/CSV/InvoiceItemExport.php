@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invoice Ninja (https://invoiceninja.com).
  *
@@ -168,10 +169,6 @@ class InvoiceItemExport extends BaseExport
                 if (str_contains($key, "item.")) {
 
                     $tmp_key = str_replace("item.", "", $key);
-
-                    // if ($tmp_key == 'type_id') {
-                    //     $tmp_key = 'type';
-                    // }
 
                     if ($tmp_key == 'tax_id') {
                         $tmp_key = 'tax_category';

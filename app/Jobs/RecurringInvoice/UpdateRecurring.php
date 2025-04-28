@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invoice Ninja (https://invoiceninja.com).
  *
@@ -11,15 +12,16 @@
 
 namespace App\Jobs\RecurringInvoice;
 
-use App\Libraries\MultiDB;
-use App\Models\Company;
-use App\Models\RecurringInvoice;
 use App\Models\User;
+use App\Models\Company;
+use App\Libraries\MultiDB;
 use Illuminate\Bus\Queueable;
+use App\Models\RecurringInvoice;
+use App\Events\Socket\RefetchEntity;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 
 class UpdateRecurring implements ShouldQueue
 {
@@ -58,6 +60,8 @@ class UpdateRecurring implements ShouldQueue
                     }
                 }
             });
+
+        event(new RefetchEntity('recurring_invoices', null, $this->user));
     }
 
     public function failed($exception = null)

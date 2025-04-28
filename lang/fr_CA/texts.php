@@ -2377,7 +2377,7 @@ Lorsque les montant apparaîtront sur votre relevé, veuillez revenir sur cette 
     'contact_custom2' => 'Deuxième personnalisation du contact',
     'currency' => 'Devise',
     'ofx_help' => 'Pour résoudre un problème, consultez les commentaires sur :ofxhome_link  et testez avec :ofxget_link.',
-    'comments' => 'commentaires',
+    'comments' => 'Commentaires',
 
     'item_product' => 'Produit de l\'article',
     'item_notes' => 'Notes de l\'article',
@@ -2884,7 +2884,7 @@ Lorsque les montant apparaîtront sur votre relevé, veuillez revenir sur cette 
     'reopened' => 'Réouvert',
     'priority' => 'Priorité',
     'last_updated' => 'Dernière mise à jour',
-    'comment' => 'Commentaires',
+    'comment' => 'Commentaire',
     'tags' => 'Libellés',
     'linked_objects' => 'Objets liés',
     'low' => 'Basse',
@@ -5565,6 +5565,10 @@ Développe automatiquement la section des notes dans le tableau de produits pour
     'upgrade_plan' => 'Mettre à jour votre plan',
     'upgrade_popup_premium_business_plus_pricing' => 'Prix ? Discutons-en !',
     'plan_selected' => 'Plan sélectionné',
+    'invalid_date_create_syntax' => 'Syntaxe de date non valide',
+    'start_and_end_date_required' => 'Date de départ et de fin requises',
+    'project_value' => 'Valeur du projet',
+    'invalid_csv_data' => 'Données CSV non valides, votre importation a été annulée.',
 );
 
 return $lang;

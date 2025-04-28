@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invoice Ninja (https://invoiceninja.com).
  *
@@ -418,7 +419,7 @@ class Invoice extends BaseModel
      */
     public function quote(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne(Quote::class);
+        return $this->hasOne(Quote::class)->where('company_id', $this->company_id);
     }
 
     public function expenses(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -646,7 +647,7 @@ class Invoice extends BaseModel
 
     public function entityEmailEvent($invitation, $reminder_template, $template = '')
     {
-        
+
         switch ($reminder_template) {
             case 'invoice':
                 event(new InvoiceWasEmailed($invitation, $invitation->company, Ninja::eventVars(auth()->user() ? auth()->user()->id : null), $reminder_template));
